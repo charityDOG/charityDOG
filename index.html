@@ -255,7 +255,7 @@
             </div>
 
 
-        <!-- Wallet Selection Popup Modal -->
+            <!-- Wallet Selection Popup Modal -->
     <div id="walletModal" class="modal">
         <div class="modal-content">
             <h4 style="margin-top:0;">Select Wallet</h4>
@@ -268,22 +268,22 @@
     </div>
 
 
-    <!-- Einbindung der echten Cardano-Web3-Bibliotheken (Lucid v0.10.x stabile CDN Version) -->
+<!-- Einbindung der echten Cardano-Web3-Bibliotheken (Lucid v0.10.x stabile CDN Version) -->
 <script src="https://unpkg.com"></script>
 
 <script>
     const RATE = 3000;
     const HARD_CAP = 100000;
     
-    // ⚠️ TRAGE HIER DEINE ECHTE TEST-EMPFÄNGER-WALLET-ADRESSE EIN:
-    const PRESALE_WALLET_ADDRESS = "addr1qy438lrkxq4a9l0ncs2mf85gz0zs7uvvajnxjzkppmnx79m0w63xjxdzh0f79q9almd3nqyg8ckpe55m7d7d0pq8fj8sdxs28j"; 
+    // ⚠️ HIER DEINE ECHTE CARDANO-PROJEKT-WALLET-ADRESSE EINTRAGEN:
+    const PRESALE_WALLET_ADDRESS = "addr1_deine_echte_wallet_adresse_hier_einsetzen..."; 
 
+    let apiInstance = null;
     let connectedWalletName = null;
-    let apiInstance = null; // Speichert die echte Wallet-Schnittstelle
 
     document.addEventListener("DOMContentLoaded", function() {
         calculateTokens();
-        updateProgressBar(1250); 
+        updateProgressBar(1250); // Visueller Startwert
     });
 
     function calculateTokens() {
@@ -304,88 +304,87 @@
         document.getElementById('progressBar').style.width = `${percentage}%`;
     }
 
-    // 🌐 DIREKTE WALLET-KOPPLUNG (SPEICHERT DIE SCHNITTSTELLE)
+    // 🌐 ECHTE WALLET-VERBINDUNG (CIP-30 Standard)
     async function connectRealWallet(walletName) {
         const lowerName = walletName.toLowerCase();
-        if (!window.cardano || !window.cardano[lowerName]) {
-            alert(`⚠️ ${walletName} extension not detected. Please install it.`);
+        
+        // Prüfen, ob window.cardano überhaupt existiert
+        if (!window.cardano) {
+            alert("⚠️ No Cardano web3 provider found. Please install a Cardano wallet extension like Eternl, Vespr, or Lace.");
+            return;
+        }
+
+        // Spezifische Wallet-Erweiterung prüfen
+        if (!window.cardano[lowerName]) {
+            alert(`⚠️ ${walletName} Wallet Extension not found in your browser. Please install or enable it.`);
             return;
         }
 
         try {
-            // Schnittstelle aktivieren und für die Transaktion abspeichern
+            // Verbindung anfordern (Nutzer muss im Wallet-Popup bestätigen)
             apiInstance = await window.cardano[lowerName].enable();
             connectedWalletName = walletName;
-
-            // UI umschalten
-            document.getElementById('connectWalletBtn').style.display = 'none';
-            document.getElementById('panelWalletName').innerText = "✓ " + walletName;
-            document.getElementById('panelWalletBalance').innerText = "Wallet Active";
-            document.getElementById('panelWalletAddress').innerText = "Direct Link Ready";
-            document.getElementById('walletInfoPanel').style.display = 'flex';
-
-            document.getElementById('actionBtn').innerText = "Send via " + walletName;
+            
+            // Benutzeroberfläche aktualisieren
+            document.getElementById('connectWalletBtn').innerText = "✓ " + walletName;
             toggleWalletModal();
-            console.log("Direct wallet bridge established.");
-
+            document.getElementById('actionBtn').innerText = "Send via " + walletName;
+            console.log(`${walletName} successfully connected via CIP-30.`);
         } catch (error) {
-            console.error("Connection failed:", error);
+            console.error("Wallet connection failed:", error);
             alert("❌ Connection declined by user.");
         }
     }
 
-    // 🛑 DISCONNECT
-    function disconnectWallet() {
-        connectedWalletName = null;
-        apiInstance = null;
-        document.getElementById('walletInfoPanel').style.display = 'none';
-        document.getElementById('connectWalletBtn').style.display = 'block';
-        document.getElementById('connectWalletBtn').innerText = 'Connect Wallet';
-        document.getElementById('actionBtn').innerText = 'Acquire Tokens';
-    }
-
-    // 💸 DIREKTER TRANSAKTIONS-BEFEHL AN ETERNL (OHNE BLOCKFROST / NO-CRASH)
+    // 💸 ECHTE TRANSAKTION AUSFÜHREN
     async function executePresaleTransaction() {
         const adaAmount = document.getElementById('adaInput').value;
         
-        if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
+        // Validierungen vorab
+        if (adaAmount < 50) { alert("⚠️ Minimum contribution is 50 ADA."); return; }
         if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
         
+        // Falls noch keine Wallet verbunden ist, Modal öffnen
         if (!connectedWalletName || !apiInstance) { 
             toggleWalletModal(); 
             return; 
         }
 
         if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
-            alert("🛑 Configuration Error: Please enter your real project wallet address in the code line 6!");
+            alert("🛑 Configuration Error: Please enter your real project wallet address in the code line 10 first!");
             return;
         }
 
         try {
-            alert(`⏳ Requesting signature from ${connectedWalletName}... The wallet extension window should open now.`);
+            // Initialisiere Lucid für Mainnet-Aktionen
+            const lucid = await Lucid.Lucid.new(null, "Mainnet");
+            lucid.selectWallet(apiInstance);
 
-            // Fehlerfreie, direkte Krypto-Interaktion über CIP-30:
-            // Wir zwingen Eternl, eine standardisierte Sende-Anforderung zu öffnen.
-            // Der Betrag wird direkt als Hexadezimal-Lovelace übergeben.
-            const lovelaceHex = (BigInt(adaAmount) * 1000000BigInt).toString(16);
+            // Fehler behoben: Korrekte BigInt-Konvertierung für Lovelace (1 ADA = 1.000.000 Lovelace)
+            const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
+
+            alert(`⏳ Opening ${connectedWalletName}... Please sign the transaction to transfer ${adaAmount} ADA to the presale vault.`);
+
+            // Transaktion bauen
+            const tx = await lucid.newTx()
+                .payToAddress(PRESALE_WALLET_ADDRESS, { lovelace: lovelaceAmount })
+                .complete();
+
+            // Transaktion vom Nutzer signieren lassen (Wallet öffnet Passworteingabe)
+            const signedTx = await tx.sign().complete();
+
+            // Transaktion an die Cardano Blockchain senden
+            const txHash = await signedTx.submit();
+
+            alert(`🎉 Success! Transaction submitted.\n\nTx Hash: ${txHash}\n\nYour purchase is registered. Tokens will be distributed based on the automated rollback/vending logic!`);
             
-            // Dieser native Befehl steuert das Eternl-Fenster direkt an
-            const txHash = await apiInstance.signTx({
-                outputs: [{
-                    address: PRESALE_WALLET_ADDRESS,
-                    amount: lovelaceHex
-                }]
-            });
-
-            if (txHash) {
-                alert(`🎉 Success! Transaction approved.\n\nTx Hash: ${txHash}`);
-                const currentProgress = 1250 + parseFloat(adaAmount);
-                updateProgressBar(currentProgress);
-            }
+            // Visuellen Balken lokal anheben
+            const currentProgress = 1250 + parseFloat(adaAmount);
+            updateProgressBar(currentProgress);
 
         } catch (error) {
-            console.error("Direct transaction injection failed:", error);
-            alert("❌ Transaction window was closed or declined in Eternl.");
+            console.error("Transaction failed:", error);
+            alert("❌ Transaction failed or was canceled by the user.");
         }
     }
 </script>
