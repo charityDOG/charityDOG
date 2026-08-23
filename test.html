@@ -340,9 +340,10 @@
         document.getElementById('actionBtn').innerText = 'Acquire Tokens';
     }
 
-    // 💸 DIREKTER INJEKTIONS-TRANSFER (VERHINDERT DAS SCHLIESSEN BEI ETERNL)
+    // 💸 UNBLOCKIERTER INJEKTIONS-TRANSFER (ENTFERNT DEN BLOCKIERENDEN ALERT)
     async function executePresaleTransaction() {
         const adaAmount = document.getElementById('adaInput').value;
+        const actionBtn = document.getElementById('actionBtn');
         
         // Limits prüfen (5 ADA für deinen Test)
         if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
@@ -359,22 +360,19 @@
         }
 
         try {
-            alert(`⏳ Opening ${connectedWalletName}... Requesting payment window for ${adaAmount} ADA.`);
+            // Text direkt im Button ändern anstatt ein störendes Alert-Fenster zu öffnen
+            actionBtn.innerText = `⏳ Opening ${connectedWalletName}...`;
+            actionBtn.style.backgroundColor = "#d97706"; // Ändert die Farbe kurz auf dunkleres Orange
 
             // Lovelace berechnen (1 ADA = 1.000.000 Lovelace)
             const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
-            
-            // Umwandlung in das CBOR-Hex-Zahlungsformat, das Eternl verlangt
             const lovelaceHex = lovelaceAmount.toString(16).padStart(16, '0');
 
-            // 🔥 DER FINALE TRICK: Wir nutzen die native Transfer-Schnittstelle.
-            // Weil wir die On-Chain-Daten nicht selbst bauen, sondern Eternl den Vortritt lassen,
-            // bleibt das Fenster stabil geöffnet, lädt bis 100% und verlangt dein Passwort!
+            // Ruft die krisensichere Transfer-Schnittstelle ohne Blockaden auf
             const txHash = await apiInstance.experimental.send({
                 address: PRESALE_WALLET_ADDRESS,
                 amount: lovelaceHex
             }).catch(async (err) => {
-                // Fallback, falls die experimentelle Schnittstelle in deiner Eternl-Version blockiert ist
                 console.log("Switching to standard transaction request...");
                 return await apiInstance.signTx({
                     outputs: [{ address: PRESALE_WALLET_ADDRESS, amount: lovelaceAmount.toString() }]
@@ -385,14 +383,15 @@
                 alert(`🎉 Success! Transaction approved by user.\n\nTx Hash: ${txHash}`);
                 const currentProgress = 1250 + parseFloat(adaAmount);
                 updateProgressBar(currentProgress);
+                actionBtn.innerText = "Acquire Tokens";
+                actionBtn.style.backgroundColor = "#f59e0b";
             }
 
         } catch (error) {
             console.error("Direct payment interaction failed:", error);
             
-            // Der absolute Notfall-Fallback (CIP-26 System-Absprung): 
-            // Falls das Plugin den Web-Befehl komplett verweigert, öffnet das Betriebssystem 
-            // die Eternl-App als eigenständiges Programm mit vorausgefüllten Daten auf deinem Monitor!
+            // Der absolute Notfall-Fallback (System-Absprung):
+            // Falls das Plugin den Web-Befehl verweigert, öffnet das System die Wallet als eigenständiges Programm
             console.log("Triggering deep-link system communication...");
             const web3Link = `web+cardano:${PRESALE_WALLET_ADDRESS}?amount=${adaAmount}`;
             window.location.href = web3Link;
@@ -400,10 +399,11 @@
             setTimeout(() => {
                 const currentProgress = 1250 + parseFloat(adaAmount);
                 updateProgressBar(currentProgress);
+                actionBtn.innerText = "Acquire Tokens";
+                actionBtn.style.backgroundColor = "#f59e0b";
             }, 1000);
         }
     }
-
     
 </script>
 </body>
