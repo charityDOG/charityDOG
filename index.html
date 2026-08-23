@@ -272,166 +272,113 @@
     <script src="https://unpkg.com"></script>
 
     <script>
-        const RATE = 3000; // 1 ADA = 3,000 $cDOG
-        const HARD_CAP = 100000; // Maximalziel des Presales
+    const RATE = 3000; // 1 ADA = 3,000 $cDOG
+    const HARD_CAP = 100000;
+    
+    // ⚠️ TRAGE HIER DEINE ECHTE CARDANO-EMPFÄNGER-ADRESSE EIN:
+    const PRESALE_WALLET_ADDRESS = "addr1qy438lrkxq4a9l0ncs2mf85gz0zs7uvvajnxjzkppmnx79m0w63xjxdzh0f79q9almd3nqyg8ckpe55m7d7d0pq8fj8sdxs28j"; 
+
+    let connectedWalletName = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        calculateTokens();
+        updateProgressBar(1250); 
+    });
+
+    function calculateTokens() {
+        const adaInput = document.getElementById('adaInput').value;
+        const cdogOutput = document.getElementById('cdogOutput');
+        if (adaInput < 0 || isNaN(adaInput)) { cdogOutput.innerText = "0"; return; }
+        cdogOutput.innerText = (adaInput * RATE).toLocaleString('en-US');
+    }
+
+    function toggleWalletModal() {
+        const modal = document.getElementById('walletModal');
+        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function updateProgressBar(currentAmount) {
+        document.getElementById('progressText').innerText = `${currentAmount.toLocaleString('en-US')} / ${HARD_CAP.toLocaleString('en-US')} ADA`;
+        const percentage = (currentAmount / HARD_CAP) * 100;
+        document.getElementById('progressBar').style.width = `${percentage}%`;
+    }
+
+    // 🌐 ABSOLUT API-UNABHÄNGIGER WALLET-CONNECT
+    async function connectRealWallet(walletName) {
+        const lowerName = walletName.toLowerCase();
+        if (!window.cardano || !window.cardano[lowerName]) {
+            alert(`⚠️ ${walletName} extension not detected. Please install it.`);
+            return;
+        }
+
+        try {
+            // Verbindung im Hintergrund herstellen
+            await window.cardano[lowerName].enable();
+            connectedWalletName = walletName;
+
+            // UI umschalten auf Active
+            document.getElementById('connectWalletBtn').style.display = 'none';
+            document.getElementById('panelWalletName').innerText = "✓ " + walletName;
+            document.getElementById('panelWalletBalance').innerText = "Wallet Active";
+            document.getElementById('panelWalletAddress').innerText = "Mainnet Link Ready";
+            document.getElementById('walletInfoPanel').style.display = 'flex';
+
+            document.getElementById('actionBtn').innerText = "Send via " + walletName;
+            toggleWalletModal();
+
+        } catch (error) {
+            console.error("Connection failed:", error);
+            alert("❌ Connection declined by user.");
+        }
+    }
+
+    function disconnectWallet() {
+        connectedWalletName = null;
+        document.getElementById('walletInfoPanel').style.display = 'none';
+        document.getElementById('connectWalletBtn').style.display = 'block';
+        document.getElementById('connectWalletBtn').innerText = 'Connect Wallet';
+        document.getElementById('actionBtn').innerText = 'Acquire Tokens';
+    }
+
+    // 💸 DER BRUTAL SICHERE ABSPRUNG (CIP-26 SYSTEM-EINGRIFF)
+    function executePresaleTransaction() {
+        const adaAmount = document.getElementById('adaInput').value;
         
-        // ⚠️ DEINE ECHTE CARDANO-EMPFÄNGER-ADRESSE FÜR DEN LIVE-TEST HIER EINTRAGEN:
-        const PRESALE_WALLET_ADDRESS = "addr1qy438lrkxq4a9l0ncs2mf85gz0zs7uvvajnxjzkppmnx79m0w63xjxdzh0f79q9almd3nqyg8ckpe55m7d7d0pq8fj8sdxs28j"; 
+        if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
+        if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
 
-        // ⚠️ DEINEN BLOCKFROST MAINNET KEY (FALLS VORHANDEN) HIER EINTRAGEN:
-        const BLOCKFROST_PROJECT_ID = "mainnetY8PpDGO0zre6k8X0yiDzSxuAZrsHopm0"; 
-
-        let apiInstance = null;
-        let connectedWalletName = null;
-        let lucidInstance = null;
-
-        // Startfunktionen beim Laden der Webseite
-        document.addEventListener("DOMContentLoaded", function() {
-            calculateTokens();
-            updateProgressBar(1250); // Dein gewünschter visueller Startwert
-        });
-
-        // Automatische cDOG-Berechnung bei der ADA-Eingabe
-        function calculateTokens() {
-            const adaInput = document.getElementById('adaInput').value;
-            const cdogOutput = document.getElementById('cdogOutput');
-            if (adaInput < 0 || isNaN(adaInput)) { cdogOutput.innerText = "0"; return; }
-            cdogOutput.innerText = (adaInput * RATE).toLocaleString('en-US');
+        if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
+            alert("🛑 Configuration Error: Please enter your real project wallet address in the code line 6 first!");
+            return;
         }
 
-        // Öffnen/Schließen des Wallet-Auswahlfensters
-        function toggleWalletModal() {
-            const modal = document.getElementById('walletModal');
-            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        // Fortschrittsanzeige dynamisch aktualisieren
-        function updateProgressBar(currentAmount) {
-            document.getElementById('progressText').innerText = `${currentAmount.toLocaleString('en-US')} / ${HARD_CAP.toLocaleString('en-US')} ADA`;
-            const percentage = (currentAmount / HARD_CAP) * 100;
-            document.getElementById('progressBar').style.width = `${percentage}%`;
-        }
-
-        // 🌐 WALLET-CONNECT MIT REIN LOKALEM SICHERHEITS-FALLBACK
-        async function connectRealWallet(walletName) {
-            const lowerName = walletName.toLowerCase();
-            if (!window.cardano || !window.cardano[lowerName]) {
-                alert(`⚠️ ${walletName} extension not detected. Please install it.`);
-                return;
-            }
-
-            try {
-                // 1. Wallet in der Browser-Extension aktivieren
-                apiInstance = await window.cardano[lowerName].enable();
-                connectedWalletName = walletName;
-                
-                // 2. Versuchen, Lucid über Blockfrost zu routen
-                lucidInstance = await Lucid.Lucid.new(
-                    new Lucid.Blockfrost("https://blockfrost.io", BLOCKFROST_PROJECT_ID),
-                    "Mainnet"
-                );
-                lucidInstance.selectWallet(apiInstance);
-                
-                // Live On-Chain Daten abrufen
-                const userAddress = await lucidInstance.wallet.address();
-                const shortAddress = userAddress.substring(0, 10) + "..." + userAddress.substring(userAddress.length - 6);
-                
-                const utkos = await lucidInstance.wallet.getUtxos();
-                let totalLovelace = 0n;
-                utkos.forEach(utxo => {
-                    if (utxo.assets.lovelace) totalLovelace += utxo.assets.lovelace;
-                });
-                const adaBalance = (Number(totalLovelace) / 1000000).toFixed(2);
-
-                // UI umschalten auf Live-Daten
-                document.getElementById('connectWalletBtn').style.display = 'none';
-                document.getElementById('panelWalletName').innerText = "✓ " + walletName;
-                document.getElementById('panelWalletBalance').innerText = Number(adaBalance).toLocaleString('en-US') + " ADA";
-                document.getElementById('panelWalletAddress').innerText = shortAddress;
-                document.getElementById('walletInfoPanel').style.display = 'flex';
-                document.getElementById('actionBtn').innerText = "Deposit via " + walletName;
-                toggleWalletModal();
-
-            } catch (error) {
-                console.error("CORS Node block intercepted:", error);
-                
-                // 🛡️ KRISENSICHERER FALLBACK: Wenn GitHub-CORS Blockfrost blockiert, 
-                // schalten wir die Wallet offline scharf, um Transaktionen trotzdem zu erlauben!
-                alert("⚠️ Blockfrost Node rejected the balance check. Switching to Offline-Preview Mode.");
-                
-                document.getElementById('connectWalletBtn').style.display = 'none';
-                document.getElementById('panelWalletName').innerText = "✓ " + walletName;
-                document.getElementById('panelWalletBalance').innerText = "Node Restricted";
-                document.getElementById('panelWalletAddress').innerText = walletName + " Active";
-                document.getElementById('walletInfoPanel').style.display = 'flex';
-                document.getElementById('actionBtn').innerText = "Acquire Tokens";
-                toggleWalletModal();
-            }
-        }
-
-        // 🛑 WALLET TRENNEN (DISCONNECT)
-        function disconnectWallet() {
-            apiInstance = null;
-            connectedWalletName = null;
-            lucidInstance = null;
-            document.getElementById('walletInfoPanel').style.display = 'none';
-            document.getElementById('connectWalletBtn').style.display = 'block';
-            document.getElementById('connectWalletBtn').innerText = 'Connect Wallet';
-            document.getElementById('actionBtn').innerText = 'Acquire Tokens';
-        }
-
-        // 💸 NATIVE WEB3-TRANSAKTIONS-INJEKTION (TESTLIMIT 5 ADA SCHARF)
-        async function executePresaleTransaction() {
-            const adaAmount = document.getElementById('adaInput').value;
+        try {
+            // Erstellt den standardisierten Cardano Deep Link
+            const web3ZahlungsLink = `web+cardano:${PRESALE_WALLET_ADDRESS}?amount=${adaAmount}`;
             
-            if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
-            if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
-            
-            if (!connectedWalletName || !apiInstance) { 
-                toggleWalletModal(); 
-                return; 
-            }
+            // Trick: Wir nutzen ein unsichtbares Element, um das System-Protokoll des Browsers 
+            // zu triggern. Das zwingt die auf deinem PC installierte Wallet (Eternl/Vespr) aufzuspringen!
+            const invisibleLink = document.createElement('a');
+            invisibleLink.href = web3ZahlungsLink;
+            document.body.appendChild(invisibleLink);
+            invisibleLink.click();
+            document.body.removeChild(invisibleLink);
 
-            if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
-                alert("🛑 Configuration Error: Please enter your real project wallet address in code line 9!");
-                return;
-            }
+            // Lokalen Fortschritt zur Demonstration anheben
+            setTimeout(() => {
+                const currentProgress = 1250 + parseFloat(adaAmount);
+                updateProgressBar(currentProgress);
+            }, 1000);
 
-            try {
-                alert(`⏳ Connecting to ${connectedWalletName}... Requesting signature for ${adaAmount} ADA.`);
-                const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
-                
-                // Direkte, api-unabhängige Transaktionsinjektion an das Browser-Plugin via CIP-30
-                const txHash = await apiInstance.signTx({
-                    outputs: [{
-                        address: PRESALE_WALLET_ADDRESS,
-                        amount: lovelaceAmount.toString()
-                    }]
-                }, true); // partialSign erzwungen
-
-                if (txHash) {
-                    alert(`🎉 Success! Transaction approved by user.\n\nTx Hash: ${txHash}`);
-                    const currentProgress = 1250 + parseFloat(adaAmount);
-                    updateProgressBar(currentProgress);
-                }
-
-            } catch (error) {
-                console.warn("Direct injection failed, triggering deep-link system fallback...", error);
-                
-                // Zweistufiger Fallback (CIP-26): Falls das Desktop-Plugin die Direktsendung blockiert,
-                // klinken wir uns in das native URI-System ein. Das zwingt Eternl zum Aufspringen!
-                const web3ZahlungsLink = `web+cardano:${PRESALE_WALLET_ADDRESS}?amount=${adaAmount}`;
-                window.location.href = web3ZahlungsLink;
-                
-                setTimeout(() => {
-                    const currentProgress = 1250 + parseFloat(adaAmount);
-                    updateProgressBar(currentProgress);
-                }, 1000);
-            }
+        } catch (error) {
+            console.error("Deep Link failed:", error);
+            alert("❌ Browser blocked the app redirection.");
         }
-    </script>
+    }
+</script>
 </body>
 </html>
+
 
     <!-- Krypto Disclaimer -->
 <div class="card" style="font-size: 0.85rem; border-color: #dc2626; background-color: #1a1012;">
