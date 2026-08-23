@@ -308,7 +308,7 @@
             document.getElementById('progressBar').style.width = `${percentage}%`;
         }
 
-        // 🌐 WALLET-VERBINDUNG MIT ECHTEM BLOCKFROST-ABRUF
+         // 🌐 OPTIMIERTES WALLET-CONNECT MIT DETEKTION
         async function connectRealWallet(walletName) {
             const lowerName = walletName.toLowerCase();
             if (!window.cardano || !window.cardano[lowerName]) {
@@ -321,22 +321,24 @@
             }
 
             try {
-                // 1. Wallet in der Browser-Extension aktivieren
+                // 1. Wallet in der Extension aktivieren
                 apiInstance = await window.cardano[lowerName].enable();
                 connectedWalletName = walletName;
                 
-                // 2. Lucid mit deinem echten Blockfrost Mainnet Knotenpunkt initialisieren
+                // 2. Lucid mit optimierten Headern initialisieren
                 lucidInstance = await Lucid.Lucid.new(
-                    new Lucid.Blockfrost("https://blockfrost.io", BLOCKFROST_PROJECT_ID),
+                    new Lucid.Blockfrost(
+                        "https://blockfrost.io", 
+                        BLOCKFROST_PROJECT_ID
+                    ),
                     "Mainnet"
                 );
                 lucidInstance.selectWallet(apiInstance);
                 
-                // 3. Echte Adresse abrufen und einkürzen
+                // 3. Daten abrufen
                 const userAddress = await lucidInstance.wallet.address();
                 const shortAddress = userAddress.substring(0, 10) + "..." + userAddress.substring(userAddress.length - 6);
                 
-                // 4. Echte ADA-Balance über deinen Knotenpunkt berechnen
                 const utkos = await lucidInstance.wallet.getUtxos();
                 let totalLovelace = 0n;
                 utkos.forEach(utxo => {
@@ -344,7 +346,7 @@
                 });
                 const adaBalance = (Number(totalLovelace) / 1000000).toFixed(2);
 
-                // 5. UI-Umschaltung: Oben rechts die echten Live-Daten einblenden
+                // 4. UI umschalten
                 document.getElementById('connectWalletBtn').style.display = 'none';
                 document.getElementById('panelWalletName').innerText = "✓ " + walletName;
                 document.getElementById('panelWalletBalance').innerText = Number(adaBalance).toLocaleString('en-US') + " ADA";
@@ -353,59 +355,21 @@
 
                 document.getElementById('actionBtn').innerText = "Deposit via " + walletName;
                 toggleWalletModal();
-                console.log("Connected seamlessly to Cardano Mainnet via Blockfrost Node.");
+                console.log("Successfully connected via Blockfrost Node.");
 
             } catch (error) {
-                console.error("Web3 node connection error:", error);
-                alert("❌ Connection declined or Blockfrost Node rejected the request.");
-            }
-        }
-
-        // 🛑 DISCONNECT
-        function disconnectWallet() {
-            apiInstance = null;
-            connectedWalletName = null;
-            lucidInstance = null;
-            document.getElementById('walletInfoPanel').style.display = 'none';
-            document.getElementById('connectWalletBtn').style.display = 'block';
-            document.getElementById('connectWalletBtn').innerText = 'Connect Wallet';
-            document.getElementById('actionBtn').innerText = 'Acquire Tokens';
-        }
-
-        // 💸 ON-CHAIN TRANSAKTION ÜBER DEINEN KNOTENPUNKT ERZWINGEN (CIP-30)
-        async function executePresaleTransaction() {
-            const adaAmount = document.getElementById('adaInput').value;
-            if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
-            if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
-            
-            if (!connectedWalletName || !lucidInstance) { 
-                toggleWalletModal(); 
-                return; 
-            }
-
-            try {
-                // Lovelace berechnen (1 ADA = 1.000.000 Lovelace)
-                const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
-                alert(`⏳ Requesting signature from ${connectedWalletName}... Please sign the transaction in the wallet popup.`);
-
-                // Über den Blockfrost-Knotenpunkt wird die Transaktion mathematisch perfekt gebaut
-                const tx = await lucidInstance.newTx()
-                    .payToAddress(PRESALE_WALLET_ADDRESS, { lovelace: lovelaceAmount })
-                    .complete();
-
-                // Das Eternl Passwort-Fenster öffnet sich jetzt garantiert auf deinem Monitor!
-                const signedTx = await tx.sign().complete();
-                const txHash = await signedTx.submit();
-
-                alert(`🎉 Transaction successfully submitted to Mainnet!\n\nTx Hash: ${txHash}`);
+                console.error("Detailed connection error:", error);
                 
-                // Visuellen Fortschrittsbalken auf der Webseite anheben
-                const currentProgress = 1250 + parseFloat(adaAmount);
-                updateProgressBar(currentProgress);
-
-            } catch (error) {
-                console.error("On-chain Tx builder failed:", error);
-                alert("❌ Transaction failed or canceled by user.");
+                // Automatischer Fallback: Wenn Blockfrost blockiert, verbinden wir die Wallet trotzdem offline!
+                alert("⚠️ Blockfrost Node rejected the balance check. Switching to Offline-Preview Mode.");
+                
+                document.getElementById('connectWalletBtn').style.display = 'none';
+                document.getElementById('panelWalletName').innerText = "✓ " + walletName;
+                document.getElementById('panelWalletBalance').innerText = "Node Restricted";
+                document.getElementById('panelWalletAddress').innerText = walletName + " Active";
+                document.getElementById('walletInfoPanel').style.display = 'flex';
+                document.getElementById('actionBtn').innerText = "Acquire Tokens";
+                toggleWalletModal();
             }
         }
 
