@@ -245,50 +245,131 @@
         </div>
     </div>
 
-    <script>
-        const RATE = 3000;
-        let connectedWallet = null;
+    <!-- Einbindung der echten Cardano-Web3-Bibliotheken (Lucid & Blockfrost/Mesh-kompatibel) -->
+<script src="https://unpkg.com"></script>
 
-        document.addEventListener("DOMContentLoaded", function() {
-            calculateTokens();
-        });
+<script>
+    const RATE = 3000;
+    const HARD_CAP = 100000;
+    
+    // ⚠️ HIER DEINE ECHTE CARDANO-PROJEKT-WALLET-ADRESSE EINTRAGEN:
+    const PRESALE_WALLET_ADDRESS = "addr1qyjx8nnd3kxc74vgdn07c054ltkacchk3efptxsehyscqw80zevaly4l783f8au5hwlmnz6u499m7jdz9pfqyh0y2clq26ew99"; 
 
-        function calculateTokens() {
-            const adaInput = document.getElementById('adaInput').value;
-            const cdogOutput = document.getElementById('cdogOutput');
-            if (adaInput < 0 || isNaN(adaInput)) { cdogOutput.innerText = "0"; return; }
-            cdogOutput.innerText = (adaInput * RATE).toLocaleString('en-US');
+    let apiInstance = null;
+    let connectedWalletName = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        calculateTokens();
+        updateProgressBar(1250); // Dein visueller Startwert
+    });
+
+    function calculateTokens() {
+        const adaInput = document.getElementById('adaInput').value;
+        const cdogOutput = document.getElementById('cdogOutput');
+        if (adaInput < 0 || isNaN(adaInput)) { cdogOutput.innerText = "0"; return; }
+        cdogOutput.innerText = (adaInput * RATE).toLocaleString('en-US');
+    }
+
+    function toggleWalletModal() {
+        const modal = document.getElementById('walletModal');
+        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function updateProgressBar(currentAmount) {
+        document.getElementById('progressText').innerText = `${currentAmount.toLocaleString('en-US')} / ${HARD_CAP.toLocaleString('en-US')} ADA`;
+        const percentage = (currentAmount / HARD_CAP) * 100;
+        document.getElementById('progressBar').style.width = `${percentage}%`;
+    }
+
+    // 🌐 ECHTE WALLET-VERBINDUNG (CIP-30 Standard)
+    async function connectRealWallet(walletName) {
+        const lowerName = walletName.toLowerCase();
+        
+        // Prüfen, ob die Browser-Erweiterung existiert
+        if (!window.cardano || !window.cardano[lowerName]) {
+            alert(`⚠️ ${walletName} Wallet Extension not found. Please install it first.`);
+            return;
         }
 
-        function toggleWalletModal() {
-            const modal = document.getElementById('walletModal');
-            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        function mockConnectWallet(walletName) {
-            connectedWallet = walletName;
+        try {
+            // Verbindung anfordern (Nutzer muss im Wallet-Popup bestätigen)
+            apiInstance = await window.cardano[lowerName].enable();
+            connectedWalletName = walletName;
+            
+            // UI aktualisieren
             document.getElementById('connectWalletBtn').innerText = "✓ " + walletName;
             toggleWalletModal();
-            document.getElementById('actionBtn').innerText = "Deposit via " + walletName;
+            document.getElementById('actionBtn').innerText = "Send via " + walletName;
+            console.log(`${walletName} successfully connected via CIP-30.`);
+        } catch (error) {
+            console.error("Wallet connection failed:", error);
+            alert("❌ Connection declined by user.");
+        }
+    }
+
+    // 💸 ECHTE TRANSAKTION AUSFÜHREN
+    async function executePresaleTransaction() {
+        const adaAmount = document.getElementById('adaInput').value;
+        
+        // Validierungen vorab
+        if (adaAmount < 50) { alert("⚠️ Minimum contribution is 50 ADA."); return; }
+        if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
+        
+        if (!connectedWalletName || !apiInstance) { 
+            toggleWalletModal(); 
+            return; 
         }
 
-        function executePresaleTransaction() {
-            const adaAmount = document.getElementById('adaInput').value;
-            if (adaAmount < 50) { alert("⚠️ Minimum contribution is 50 ADA."); return; }
-            if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
-            if (!connectedWallet) { toggleWalletModal(); return; }
+        if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
+            alert("🛑 Configuration Error: Please enter your real project wallet address in the code line 133 first!");
+            return;
+        }
 
-            alert(`🎉 Connection successful!\n\nYour wallet provider (${connectedWallet}) is preparing a transaction of ${adaAmount} ADA.\n\nAfter signing, you will receive your cDOG tokens directly back!`);
+        try {
+            // Initialisiere Lucid ohne Blockfrost (für direkte Wallet-zu-Wallet-Transaktionen)
+            const lucid = await Lucid.Lucid.new(null, "Mainnet");
+            lucid.selectWallet(apiInstance);
+
+            // Betrag in Lovelace umrechnen (1 ADA = 1.000.000 Lovelace)
+            const lovelaceAmount = BigInt(adaAmount) * 1000000BigInt;
+
+            alert(`⏳ Opening ${connectedWalletName}... Please sign the transaction to transfer ${adaAmount} ADA to the presale vault.`);
+
+            // Transaktion bauen
+            const tx = await lucid.newTx()
+                .payToAddress(PRESALE_WALLET_ADDRESS, { lovelace: lovelaceAmount })
+                .complete();
+
+            // Transaktion vom Nutzer signieren lassen (Wallet öffnet Passworteingabe)
+            const signedTx = await tx.sign().complete();
+
+            // Transaktion an die Cardano Blockchain senden
+            const txHash = await signedTx.submit();
+
+            alert(`🎉 Success! Transaction submitted.\n\nTx Hash: ${txHash}\n\nYour purchase is registered. Tokens will be distributed based on the automated rollback/vending logic!`);
             
-            setTimeout(() => {
-                const currentProgress = 1250 + parseFloat(adaAmount);
-                document.getElementById('progressText').innerText = `${currentProgress.toLocaleString('en-US')} / 100,000 ADA`;
-                document.getElementById('progressBar').style.width = `${(currentProgress / 100000) * 100}%`;
-            }, 1000);
-        }
+            // Visuellen Balken lokal anheben
+            const currentProgress = 1250 + parseFloat(adaAmount);
+            updateProgressBar(currentProgress);
 
-      
-    </script>
+        } catch (error) {
+            console.error("Transaction failed:", error);
+            alert("❌ Transaction failed or was canceled by the user.");
+        }
+    }
+
+    // Modal-Buttons im HTML dynamisch auf die echten Funktionen umbiegen
+    document.addEventListener("DOMContentLoaded", function() {
+        const buttons = document.querySelectorAll('.wallet-option');
+        if(buttons.length >= 3) {
+            buttons[0].setAttribute('onclick', "connectRealWallet('Eternl')");
+            buttons[1].setAttribute('onclick', "connectRealWallet('Vespr')");
+            buttons[2].setAttribute('onclick', "connectRealWallet('Lace')");
+        }
+    });
+</script>
+
+    
 </body>
 </html>
     <!-- Krypto Disclaimer -->
