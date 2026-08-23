@@ -245,7 +245,7 @@
         </div>
     </div>
 
-    <!-- Einbindung der echten Cardano-Web3-Bibliotheken (Lucid & Blockfrost/Mesh-kompatibel) -->
+    <!-- Einbindung der echten Cardano-Web3-Bibliotheken (Lucid v0.10.x stabile CDN Version) -->
 <script src="https://unpkg.com"></script>
 
 <script>
@@ -253,14 +253,14 @@
     const HARD_CAP = 100000;
     
     // ⚠️ HIER DEINE ECHTE CARDANO-PROJEKT-WALLET-ADRESSE EINTRAGEN:
-    const PRESALE_WALLET_ADDRESS = "addr1qyjx8nnd3kxc74vgdn07c054ltkacchk3efptxsehyscqw80zevaly4l783f8au5hwlmnz6u499m7jdz9pfqyh0y2clq26ew99"; 
+    const PRESALE_WALLET_ADDRESS = "addr1_deine_echte_wallet_adresse_hier_einsetzen..."; 
 
     let apiInstance = null;
     let connectedWalletName = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         calculateTokens();
-        updateProgressBar(1250); // Dein visueller Startwert
+        updateProgressBar(1250); // Visueller Startwert
     });
 
     function calculateTokens() {
@@ -285,9 +285,15 @@
     async function connectRealWallet(walletName) {
         const lowerName = walletName.toLowerCase();
         
-        // Prüfen, ob die Browser-Erweiterung existiert
-        if (!window.cardano || !window.cardano[lowerName]) {
-            alert(`⚠️ ${walletName} Wallet Extension not found. Please install it first.`);
+        // Prüfen, ob window.cardano überhaupt existiert
+        if (!window.cardano) {
+            alert("⚠️ No Cardano web3 provider found. Please install a Cardano wallet extension like Eternl, Vespr, or Lace.");
+            return;
+        }
+
+        // Spezifische Wallet-Erweiterung prüfen
+        if (!window.cardano[lowerName]) {
+            alert(`⚠️ ${walletName} Wallet Extension not found in your browser. Please install or enable it.`);
             return;
         }
 
@@ -296,7 +302,7 @@
             apiInstance = await window.cardano[lowerName].enable();
             connectedWalletName = walletName;
             
-            // UI aktualisieren
+            // Benutzeroberfläche aktualisieren
             document.getElementById('connectWalletBtn').innerText = "✓ " + walletName;
             toggleWalletModal();
             document.getElementById('actionBtn').innerText = "Send via " + walletName;
@@ -315,23 +321,24 @@
         if (adaAmount < 50) { alert("⚠️ Minimum contribution is 50 ADA."); return; }
         if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
         
+        // Falls noch keine Wallet verbunden ist, Modal öffnen
         if (!connectedWalletName || !apiInstance) { 
             toggleWalletModal(); 
             return; 
         }
 
         if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
-            alert("🛑 Configuration Error: Please enter your real project wallet address in the code line 133 first!");
+            alert("🛑 Configuration Error: Please enter your real project wallet address in the code line 10 first!");
             return;
         }
 
         try {
-            // Initialisiere Lucid ohne Blockfrost (für direkte Wallet-zu-Wallet-Transaktionen)
+            // Initialisiere Lucid für Mainnet-Aktionen
             const lucid = await Lucid.Lucid.new(null, "Mainnet");
             lucid.selectWallet(apiInstance);
 
-            // Betrag in Lovelace umrechnen (1 ADA = 1.000.000 Lovelace)
-            const lovelaceAmount = BigInt(adaAmount) * 1000000BigInt;
+            // Fehler behoben: Korrekte BigInt-Konvertierung für Lovelace (1 ADA = 1.000.000 Lovelace)
+            const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
 
             alert(`⏳ Opening ${connectedWalletName}... Please sign the transaction to transfer ${adaAmount} ADA to the presale vault.`);
 
@@ -357,21 +364,10 @@
             alert("❌ Transaction failed or was canceled by the user.");
         }
     }
-
-    // Modal-Buttons im HTML dynamisch auf die echten Funktionen umbiegen
-    document.addEventListener("DOMContentLoaded", function() {
-        const buttons = document.querySelectorAll('.wallet-option');
-        if(buttons.length >= 3) {
-            buttons[0].setAttribute('onclick', "connectRealWallet('Eternl')");
-            buttons[1].setAttribute('onclick', "connectRealWallet('Vespr')");
-            buttons[2].setAttribute('onclick', "connectRealWallet('Lace')");
-        }
-    });
 </script>
-
-    
 </body>
 </html>
+
     <!-- Krypto Disclaimer -->
 <div class="card" style="font-size: 0.85rem; border-color: #dc2626; background-color: #1a1012;">
     <h2 style="color: #ef4444; border-bottom-color: #ef4444;">⚠️ Cryptocurrency Risk Disclaimer</h2>
