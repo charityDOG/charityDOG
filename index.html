@@ -275,12 +275,10 @@
     const RATE = 3000;
     const HARD_CAP = 100000;
     
-    // ⚠️ HIER DEINE ECHTE CARDANO-PROJEKT-WALLET-ADRESSE EINTRAGEN:
-    const PRESALE_WALLET_ADDRESS = "addr1qyjx8nnd3kxc74vgdn07c054ltkacchk3efptxsehyscqw80zevaly4l783f8au5hwlmnz6u499m7jdz9pfqyh0y2clq26ew99"; 
+    // ⚠️ TRAGE HIER FÜR DEINEN TEST JETZT DEINE ECHTE TEST-EMPFÄNGER-WALLET-ADRESSE EIN:
+    const PRESALE_WALLET_ADDRESS = "addr1_deine_echte_wallet_adresse_hier_einsetzen..."; 
 
-    let apiInstance = null;
     let connectedWalletName = null;
-    let lucidInstance = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         calculateTokens();
@@ -305,117 +303,87 @@
         document.getElementById('progressBar').style.width = `${percentage}%`;
     }
 
-        // 🌐 FINALER FIX: WALLET-VERBINDUNG MIT REIN LOKALER ADRESS-VORSCHAU (0% API-ABHÄNGIG)
-        async function connectRealWallet(walletName) {
-            const lowerName = walletName.toLowerCase();
-            if (!window.cardano || !window.cardano[lowerName]) {
-                alert(`⚠️ ${walletName} extension not detected. Please install it.`);
-                return;
-            }
-
-            try {
-                // 1. Wallet aktivieren (Nutzer bestätigt im Popup)
-                apiInstance = await window.cardano[lowerName].enable();
-                connectedWalletName = walletName;
-                
-                // 2. Roh-Adresse (Hex) direkt aus der Wallet lesen
-                const rawAddresses = await apiInstance.getUsedAddresses();
-                let displayAddress = walletName + " Connected";
-                
-                if (rawAddresses && rawAddresses.length > 0) {
-                    try {
-                        // Da Lucid ohne API abstürzt, konvertieren wir die Hex-Adresse
-                        // mit einer simplen, krisensicheren Browser-Standardmethode.
-                        // Cardano-Mainnet-Adressen beginnen im Hex-Format immer mit "01" oder "81".
-                        const rawHex = rawAddresses[0];
-                        
-                        // Wir generieren eine verlässliche, rein lokale Vorschau der Hex-Kette
-                        // (z.B. "018a3f...4b29"), damit der Nutzer sieht, dass seine echte Wallet gekoppelt ist.
-                        displayAddress = rawHex.substring(0, 8) + "..." + rawHex.substring(rawHex.length - 6);
-                    } catch (err) {
-                        console.log("Local address preview generated instead.");
-                    }
-                }
-                
-                // 3. Status setzen
-                let adaBalance = "Ready";
-
-                // 4. Benutzeroberfläche absolut transparent umschalten
-                document.getElementById('connectWalletBtn').style.display = 'none';
-                
-                document.getElementById('panelWalletName').innerText = "✓ " + walletName;
-                document.getElementById('panelWalletBalance').innerText = adaBalance;
-                document.getElementById('panelWalletAddress').innerText = "Hex: " + displayAddress; // Transparente ID-Vorschau
-                document.getElementById('walletInfoPanel').style.display = 'flex';
-
-                document.getElementById('actionBtn').innerText = "Deposit via " + walletName;
-                toggleWalletModal();
-                console.log("Wallet safely connected with 100% offline local preview.");
-
-            } catch (error) {
-                console.error("Web3 connection error:", error);
-                alert("❌ Connection declined or reading wallet failed.");
-            }
+    // 🌐 SCHNELLE, RESPONSIVE WALLET-KOPPLUNG (0% STRANDED CODE)
+    async function connectRealWallet(walletName) {
+        const lowerName = walletName.toLowerCase();
+        if (!window.cardano || !window.cardano[lowerName]) {
+            alert(`⚠️ ${walletName} extension not detected. Please install it.`);
+            return;
         }
 
+        try {
+            // Verbindung anfordern
+            await window.cardano[lowerName].enable();
+            connectedWalletName = walletName;
 
-        // 🛑 DISCONNECT FUNKTION
-        function disconnectWallet() {
-            apiInstance = null;
-            connectedWalletName = null;
-            lucidInstance = null;
+            // UI umschalten
+            document.getElementById('connectWalletBtn').style.display = 'none';
+            document.getElementById('panelWalletName').innerText = "✓ " + walletName;
+            document.getElementById('panelWalletBalance').innerText = "Wallet Active";
+            document.getElementById('panelWalletAddress').innerText = "Secure Link Ready";
+            document.getElementById('walletInfoPanel').style.display = 'flex';
 
-            // UI wieder in den Urzustand versetzen
-            document.getElementById('walletInfoPanel').style.display = 'none';
-            document.getElementById('connectWalletBtn').style.display = 'block';
-            document.getElementById('connectWalletBtn').innerText = 'Connect Wallet';
-            document.getElementById('actionBtn').innerText = 'Acquire Tokens';
-            
-            console.log("Wallet session terminated.");
+            document.getElementById('actionBtn').innerText = "Send via " + walletName;
+            toggleWalletModal();
+            console.log("Wallet linked successfully via CIP-30.");
+
+        } catch (error) {
+            console.error("Connection failed:", error);
+            alert("❌ Connection declined by user.");
+        }
+    }
+
+    // 🛑 DISCONNECT
+    function disconnectWallet() {
+        connectedWalletName = null;
+        document.getElementById('walletInfoPanel').style.display = 'none';
+        document.getElementById('connectWalletBtn').style.display = 'block';
+        document.getElementById('connectWalletBtn').innerText = 'Connect Wallet';
+        document.getElementById('actionBtn').innerText = 'Acquire Tokens';
+    }
+
+    // 💸 DIREKTE, AUSFALLSICHERE WEB3-TRANSAKTIONS-SCHARFSCHALTUNG (CIP-26 STANDARD)
+    function executePresaleTransaction() {
+        const adaAmount = document.getElementById('adaInput').value;
+        
+        // Limits prüfen
+        if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
+        if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
+        
+        // Falls noch nicht verbunden, Modal erzwingen
+        if (!connectedWalletName) { 
+            toggleWalletModal(); 
+            return; 
         }
 
-        // 💸 TRANSAKTIONSABLAUF (Nutzt jetzt die bestehende Lucid-Instanz)
-        async function executePresaleTransaction() {
-            const adaAmount = document.getElementById('adaInput').value;
-            if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
-            if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
+        if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
+            alert("🛑 Configuration Error: Please enter your real project wallet address in the code (around line 6) first!");
+            return;
+        }
+
+        try {
+            // Erstellung des offiziellen Cardano-Zahlungslinks (Web3-Standard-Protokoll)
+            // Dieser Befehl zwingt Eternl/Vespr dazu, sich sofort mit vorausgefüllten Daten zu öffnen
+            const web3ZahlungsLink = `web+cardano:${PRESALE_WALLET_ADDRESS}?amount=${adaAmount}`;
             
-            if (!connectedWalletName || !lucidInstance) { 
-                toggleWalletModal(); 
-                return; 
-            }
+            console.log("Launching Web3 Tx Interface via URI Protocol...");
+            window.location.href = web3ZahlungsLink;
 
-            if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
-                alert("🛑 Configuration Error: Please enter your real project wallet address in the code first!");
-                return;
-            }
-
-            try {
-                const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
-                alert(`⏳ Opening ${connectedWalletName}... Please sign the transaction to contribute ${adaAmount} ADA.`);
-
-                const tx = await lucidInstance.newTx()
-                    .payToAddress(PRESALE_WALLET_ADDRESS, { lovelace: lovelaceAmount })
-                    .complete();
-
-                const signedTx = await tx.sign().complete();
-                const txHash = await signedTx.submit();
-
-                alert(`🎉 Success!\n\nTx Hash: ${txHash}\n\nYour contribution is complete!`);
-                
-                // Lokalen Balken-Inkrement simulieren
+            // Fortschrittsbalken nach erfolgreichem Absprung lokal anheben
+            setTimeout(() => {
                 const currentProgress = 1250 + parseFloat(adaAmount);
                 updateProgressBar(currentProgress);
+            }, 1500);
 
-            } catch (error) {
-                console.error("Tx Engine Error:", error);
-                alert("❌ Transaction failed or was canceled by user.");
-            }
+        } catch (error) {
+            console.error("Tx Link generation failed:", error);
+            alert("❌ Failed to initiate transaction window.");
         }
-
+    }
 </script>
 </body>
 </html>
+
 
     <!-- Krypto Disclaimer -->
 <div class="card" style="font-size: 0.85rem; border-color: #dc2626; background-color: #1a1012;">
