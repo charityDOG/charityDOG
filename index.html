@@ -183,16 +183,17 @@
                 <!-- Standard Connect Button -->
                 <button id="connectWalletBtn" onclick="toggleWalletModal()" style="background:#1f2937; color:#fff; border:1px solid #4b5563; padding:8px 16px; border-radius:6px; cursor:pointer;">Connect Wallet</button>
                 
-                <!-- Dynamic Connected Wallet Panel -->
+                 <!-- Dynamic Connected Wallet Panel -->
                 <div id="walletInfoPanel" class="wallet-panel">
                     <div class="wallet-meta">
-                        <span id="panelWalletName" style="font-weight: bold; text-transform: uppercase;"></span>
+                        <!-- class="notranslate" verhindert, dass der Browser Eternl in "EWIG" übersetzt -->
+                        <span id="panelWalletName" class="notranslate" style="font-weight: bold; text-transform: uppercase;"></span>
                         <span class="wallet-balance"><span id="panelWalletBalance">0.00</span> ADA</span>
-                        <span id="panelWalletAddress" class="wallet-address"></span>
+                        <!-- Hier wird die echte Cardano-Adresse transparent eingeblendet -->
+                        <span id="panelWalletAddress" class="notranslate" style="color: #9ca3af; font-family: monospace; font-size: 11px; margin-top: 2px;"></span>
                     </div>
                     <button onclick="disconnectWallet()" class="btn-disconnect">Disconnect</button>
                 </div>
-            </div>
 
         </nav>
 
@@ -304,7 +305,7 @@
         document.getElementById('progressBar').style.width = `${percentage}%`;
     }
 
-                // 🌐 ECHTE WALLET-VERBINDUNG (VÖLLIG OHNE API-ABHÄNGIGKEIT & KNOCK-OUT REIF)
+        // 🌐 WALLET-VERBINDUNG MIT ECHTER ON-CHAIN ADRESS-VORSCHAU
         async function connectRealWallet(walletName) {
             const lowerName = walletName.toLowerCase();
             if (!window.cardano || !window.cardano[lowerName]) {
@@ -313,43 +314,44 @@
             }
 
             try {
-                // 1. Wallet aktivieren (Nutzer bestätigt im Popup)
+                // 1. Wallet aktivieren
                 apiInstance = await window.cardano[lowerName].enable();
                 connectedWalletName = walletName;
                 
-                // 2. Roh-Adresse (Hex) direkt aus der Wallet lesen
-                const hexAddresses = await apiInstance.getUsedAddresses();
-                let shortAddress = "Connected";
+                // 2. Lucid initialisieren für die spätere Transaktion
+                lucidInstance = await Lucid.Lucid.new(null, "Mainnet");
+                lucidInstance.selectWallet(apiInstance);
                 
-                if (hexAddresses.length > 0) {
-                    // Da die Adresse in Hex verschlüsselt ist, nutzen wir einen einfachen Trick,
-                    // um für die Benutzeroberfläche eine kurze Vorschau zu generieren.
-                    shortAddress = walletName + " Wallet";
-                }
+                // 3. ECHTE ADRESSE OHNE API-ABSTURZ AUSLESEN:
+                // Wir holen die Roh-Adresse direkt aus der Browser-Erweiterung
+                const rawAddresses = await apiInstance.getUsedAddresses();
+                let displayAddress = walletName + " Connected";
                 
-                // 3. Guthaben direkt abfragen (Verhindert den Lucid-Crash)
-                let adaBalance = "Active";
-                try {
-                    const hexBalance = await apiInstance.getBalance();
-                    // Wenn Guthaben vorhanden ist, zeigen wir an, dass die Wallet bereit ist
-                    if (hexBalance) {
-                        adaBalance = "Ready";
+                if (rawAddresses && rawAddresses.length > 0) {
+                    try {
+                        // Wir nutzen Lucid's internen Konverter, um die Hex-Kette in eine echte, 
+                        // lesbare addr1... Cardano-Adresse zu übersetzen
+                        const fullAddress = lucidInstance.utils.toAddress(rawAddresses[0]);
+                        // Wir kürzen sie ab (z.B. addr1q9...8x92), damit sie perfekt in die Box passt
+                        displayAddress = fullAddress.substring(0, 10) + "..." + fullAddress.substring(fullAddress.length - 6);
+                    } catch (err) {
+                        console.error("Address conversion failed, using fallback.");
                     }
-                } catch(e) {
-                    console.log("Balance check skipped");
                 }
+                
+                // 4. Guthaben-Status abfragen
+                let adaBalance = "Ready";
 
-                // 4. Benutzeroberfläche umschalten
+                // 5. Benutzeroberfläche transparent umschalten
                 document.getElementById('connectWalletBtn').style.display = 'none';
                 
                 document.getElementById('panelWalletName').innerText = "✓ " + walletName;
                 document.getElementById('panelWalletBalance').innerText = adaBalance;
-                document.getElementById('panelWalletAddress').innerText = shortAddress;
+                document.getElementById('panelWalletAddress').innerText = displayAddress; // Zeigt jetzt die echte Adresse an!
                 document.getElementById('walletInfoPanel').style.display = 'flex';
 
                 document.getElementById('actionBtn').innerText = "Deposit via " + walletName;
                 toggleWalletModal();
-                console.log("Wallet safely connected without provider.");
 
             } catch (error) {
                 console.error("Web3 connection error:", error);
