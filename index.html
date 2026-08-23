@@ -268,21 +268,22 @@
     </div>
 
 
-    <!-- Einbindung der stabilen Cardano-Web3-Basisbibliothek via CDN -->
-    <script src="https://unpkg.com"></script>
+<!-- Einbindung der stabilen Lucid-Bibliothek, die dein Eternl-Fenster triggert -->
+<script src="https://unpkg.com"></script>
 
-    <script>
-    const RATE = 3000; // 1 ADA = 3,000 $cDOG
+<script>
+    const RATE = 3000;
     const HARD_CAP = 100000;
     
-    // ⚠️ TRAGE HIER DEINE ECHTE CARDANO-EMPFÄNGER-ADRESSE EIN:
-    const PRESALE_WALLET_ADDRESS = "addr1qy438lrkxq4a9l0ncs2mf85gz0zs7uvvajnxjzkppmnx79m0w63xjxdzh0f79q9almd3nqyg8ckpe55m7d7d0pq8fj8sdxs28j"; 
+    // ⚠️ HIER DEINE ECHTE CARDANO-PROJEKT-WALLET-ADRESSE EINTRAGEN:
+    const PRESALE_WALLET_ADDRESS = "addr1_deine_echte_wallet_adresse_hier_einsetzen..."; 
 
+    let apiInstance = null;
     let connectedWalletName = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         calculateTokens();
-        updateProgressBar(1250); 
+        updateProgressBar(1250); // Visueller Startwert
     });
 
     function calculateTokens() {
@@ -303,7 +304,7 @@
         document.getElementById('progressBar').style.width = `${percentage}%`;
     }
 
-    // 🌐 ABSOLUT API-UNABHÄNGIGER WALLET-CONNECT
+    // 🌐 DIE FUNKTIONIERENDE WALLET-VERBINDUNG (OHNE API-ABSTURZ)
     async function connectRealWallet(walletName) {
         const lowerName = walletName.toLowerCase();
         if (!window.cardano || !window.cardano[lowerName]) {
@@ -312,27 +313,29 @@
         }
 
         try {
-            // Verbindung im Hintergrund herstellen
-            await window.cardano[lowerName].enable();
+            // Verbindet die Webseite mit dem Eternl-Browser-Plugin
+            apiInstance = await window.cardano[lowerName].enable();
             connectedWalletName = walletName;
-
-            // UI umschalten auf Active
+            
+            // UI umschalten auf Aktiv
             document.getElementById('connectWalletBtn').style.display = 'none';
             document.getElementById('panelWalletName').innerText = "✓ " + walletName;
-            document.getElementById('panelWalletBalance').innerText = "Wallet Active";
-            document.getElementById('panelWalletAddress').innerText = "Mainnet Link Ready";
+            document.getElementById('panelWalletBalance').innerText = "Ready ADA";
+            document.getElementById('panelWalletAddress').innerText = walletName + " Active";
             document.getElementById('walletInfoPanel').style.display = 'flex';
 
-            document.getElementById('actionBtn').innerText = "Send via " + walletName;
+            document.getElementById('actionBtn').innerText = "Deposit via " + walletName;
             toggleWalletModal();
-
+            console.log("Wallet bridged successfully via CIP-30.");
         } catch (error) {
             console.error("Connection failed:", error);
             alert("❌ Connection declined by user.");
         }
     }
 
+    // 🛑 DISCONNECT
     function disconnectWallet() {
+        apiInstance = null;
         connectedWalletName = null;
         document.getElementById('walletInfoPanel').style.display = 'none';
         document.getElementById('connectWalletBtn').style.display = 'block';
@@ -340,39 +343,52 @@
         document.getElementById('actionBtn').innerText = 'Acquire Tokens';
     }
 
-    // 💸 DER BRUTAL SICHERE ABSPRUNG (CIP-26 SYSTEM-EINGRIFF)
-    function executePresaleTransaction() {
+    // 💸 DIE TRANSAKTIONS-INJEKTION, DIE DEIN POPUP ERZWINGT (AUF 5 ADA ANGEPASST)
+    async function executePresaleTransaction() {
         const adaAmount = document.getElementById('adaInput').value;
         
+        // Limits prüfen (auf 5 ADA für deinen Test herabgesenkt)
         if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
         if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
+        
+        if (!connectedWalletName || !apiInstance) { 
+            toggleWalletModal(); 
+            return; 
+        }
 
         if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
-            alert("🛑 Configuration Error: Please enter your real project wallet address in the code line 6 first!");
+            alert("🛑 Configuration Error: Please enter your real project wallet address in code line 9!");
             return;
         }
 
         try {
-            // Erstellt den standardisierten Cardano Deep Link
-            const web3ZahlungsLink = `web+cardano:${PRESALE_WALLET_ADDRESS}?amount=${adaAmount}`;
-            
-            // Trick: Wir nutzen ein unsichtbares Element, um das System-Protokoll des Browsers 
-            // zu triggern. Das zwingt die auf deinem PC installierte Wallet (Eternl/Vespr) aufzuspringen!
-            const invisibleLink = document.createElement('a');
-            invisibleLink.href = web3ZahlungsLink;
-            document.body.appendChild(invisibleLink);
-            invisibleLink.click();
-            document.body.removeChild(invisibleLink);
+            alert(`⏳ Opening ${connectedWalletName}... Please sign the transaction to transfer ${adaAmount} ADA.`);
 
-            // Lokalen Fortschritt zur Demonstration anheben
-            setTimeout(() => {
-                const currentProgress = 1250 + parseFloat(adaAmount);
-                updateProgressBar(currentProgress);
-            }, 1000);
+            // Lucid initialisieren (Reiner Offline-Mainnet-Modus)
+            const lucid = await Lucid.Lucid.new(null, "Mainnet");
+            lucid.selectWallet(apiInstance);
+
+            // Umrechnung von ADA in Lovelace
+            const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
+
+            // Transaktion bauen
+            const tx = await lucid.newTx()
+                .payToAddress(PRESALE_WALLET_ADDRESS, { lovelace: lovelaceAmount })
+                .complete();
+
+            // 🔥 DIESER BEFEHL GERIERT DAS POPUP AUF DEINEM MONITOR:
+            const signedTx = await tx.sign().complete();
+            const txHash = await signedTx.submit();
+
+            alert(`🎉 Success! Transaction submitted.\n\nTx Hash: ${txHash}`);
+            
+            // Lokalen Balken erhöhen
+            const currentProgress = 1250 + parseFloat(adaAmount);
+            updateProgressBar(currentProgress);
 
         } catch (error) {
-            console.error("Deep Link failed:", error);
-            alert("❌ Browser blocked the app redirection.");
+            console.error("Transaction failed:", error);
+            alert("❌ Transaction failed or was canceled by the user.");
         }
     }
 </script>
