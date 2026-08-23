@@ -153,6 +153,14 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; }
         .modal-content { background: #111827; padding: 20px; border-radius: 12px; width: 300px; text-align: center; border: 1px solid #374151; }
         .wallet-option { background: #1f2937; border: 1px solid #4b5563; color: white; padding: 10px; margin: 8px 0; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        /* Wallet Info Panel Styles */
+        .wallet-panel { background: #111827; border: 1px solid #374151; padding: 8px 12px; border-radius: 8px; display: none; align-items: center; gap: 12px; font-size: 13px; }
+        .wallet-meta { display: flex; flex-direction: column; text-align: left; }
+        .wallet-balance { color: #f59e0b; font-weight: bold; }
+        .wallet-address { color: #9ca3af; font-family: monospace; }
+        .btn-disconnect { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        .btn-disconnect:hover { background: #dc2626; }
     </style>
 </head>
 <body>
@@ -171,9 +179,21 @@
                 <img src="logo.jpg" alt="charityDOG Logo" class="nav-logo-img">
                 <span>charityDOG</span>
             </div>
-            <div>
+             <div>
+                <!-- Standard Connect Button -->
                 <button id="connectWalletBtn" onclick="toggleWalletModal()" style="background:#1f2937; color:#fff; border:1px solid #4b5563; padding:8px 16px; border-radius:6px; cursor:pointer;">Connect Wallet</button>
+                
+                <!-- Dynamic Connected Wallet Panel -->
+                <div id="walletInfoPanel" class="wallet-panel">
+                    <div class="wallet-meta">
+                        <span id="panelWalletName" style="font-weight: bold; text-transform: uppercase;"></span>
+                        <span class="wallet-balance"><span id="panelWalletBalance">0.00</span> ADA</span>
+                        <span id="panelWalletAddress" class="wallet-address"></span>
+                    </div>
+                    <button onclick="disconnectWallet()" class="btn-disconnect">Disconnect</button>
+                </div>
             </div>
+
         </nav>
 
         <!-- Main Content Grid -->
@@ -259,6 +279,7 @@
 
     let apiInstance = null;
     let connectedWalletName = null;
+    let lucidInstance = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         calculateTokens();
@@ -283,89 +304,105 @@
         document.getElementById('progressBar').style.width = `${percentage}%`;
     }
 
-    // 🌐 ECHTE WALLET-VERBINDUNG (CIP-30 Standard)
-    async function connectRealWallet(walletName) {
-        const lowerName = walletName.toLowerCase();
-        
-        // Prüfen, ob window.cardano überhaupt existiert
-        if (!window.cardano) {
-            alert("⚠️ No Cardano web3 provider found. Please install a Cardano wallet extension like Eternl, Vespr, or Lace.");
-            return;
+            // 🌐 WALLET-VERBINDUNG MIT ECHTEM BALANCE-READOUT
+        async function connectRealWallet(walletName) {
+            const lowerName = walletName.toLowerCase();
+            if (!window.cardano || !window.cardano[lowerName]) {
+                alert(`⚠️ ${walletName} extension not detected. Please install it.`);
+                return;
+            }
+
+            try {
+                apiInstance = await window.cardano[lowerName].enable();
+                connectedWalletName = walletName;
+                
+                // Lucid mit dem echten Wallet-Anbieter initialisieren
+                lucidInstance = await Lucid.Lucid.new(null, "Mainnet");
+                lucidInstance.selectWallet(apiInstance);
+                
+                // Echte Adresse abrufen und einkürzen
+                const userAddress = await lucidInstance.wallet.address();
+                const shortAddress = userAddress.substring(0, 8) + "..." + userAddress.substring(userAddress.length - 4);
+                
+                // Echtes Guthaben abrufen (in Lovelace auswerten)
+                const utkos = await lucidInstance.wallet.getUtxos();
+                let totalLovelace = 0n;
+                utkos.forEach(utxo => {
+                    if (utxo.assets.lovelace) totalLovelace += utxo.assets.lovelace;
+                });
+                const adaBalance = (Number(totalLovelace) / 1000000).toFixed(2);
+
+                // UI-Wechsel: Normalen Button verstecken, neues Panel anzeigen
+                document.getElementById('connectWalletBtn').style.display = 'none';
+                
+                document.getElementById('panelWalletName').innerText = "✓ " + walletName;
+                document.getElementById('panelWalletBalance').innerText = Number(adaBalance).toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('panelWalletAddress').innerText = shortAddress;
+                document.getElementById('walletInfoPanel').style.display = 'flex';
+
+                document.getElementById('actionBtn').innerText = "Deposit via " + walletName;
+                toggleWalletModal();
+
+            } catch (error) {
+                console.error("Web3 connection error:", error);
+                alert("❌ Connection declined or reading wallet failed.");
+            }
         }
 
-        // Spezifische Wallet-Erweiterung prüfen
-        if (!window.cardano[lowerName]) {
-            alert(`⚠️ ${walletName} Wallet Extension not found in your browser. Please install or enable it.`);
-            return;
-        }
+        // 🛑 DISCONNECT FUNKTION
+        function disconnectWallet() {
+            apiInstance = null;
+            connectedWalletName = null;
+            lucidInstance = null;
 
-        try {
-            // Verbindung anfordern (Nutzer muss im Wallet-Popup bestätigen)
-            apiInstance = await window.cardano[lowerName].enable();
-            connectedWalletName = walletName;
+            // UI wieder in den Urzustand versetzen
+            document.getElementById('walletInfoPanel').style.display = 'none';
+            document.getElementById('connectWalletBtn').style.display = 'block';
+            document.getElementById('connectWalletBtn').innerText = 'Connect Wallet';
+            document.getElementById('actionBtn').innerText = 'Acquire Tokens';
             
-            // Benutzeroberfläche aktualisieren
-            document.getElementById('connectWalletBtn').innerText = "✓ " + walletName;
-            toggleWalletModal();
-            document.getElementById('actionBtn').innerText = "Send via " + walletName;
-            console.log(`${walletName} successfully connected via CIP-30.`);
-        } catch (error) {
-            console.error("Wallet connection failed:", error);
-            alert("❌ Connection declined by user.");
-        }
-    }
-
-    // 💸 ECHTE TRANSAKTION AUSFÜHREN
-    async function executePresaleTransaction() {
-        const adaAmount = document.getElementById('adaInput').value;
-        
-        // Validierungen vorab
-        if (adaAmount < 50) { alert("⚠️ Minimum contribution is 50 ADA."); return; }
-        if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
-        
-        // Falls noch keine Wallet verbunden ist, Modal öffnen
-        if (!connectedWalletName || !apiInstance) { 
-            toggleWalletModal(); 
-            return; 
+            console.log("Wallet session terminated.");
         }
 
-        if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
-            alert("🛑 Configuration Error: Please enter your real project wallet address in the code line 10 first!");
-            return;
-        }
-
-        try {
-            // Initialisiere Lucid für Mainnet-Aktionen
-            const lucid = await Lucid.Lucid.new(null, "Mainnet");
-            lucid.selectWallet(apiInstance);
-
-            // Fehler behoben: Korrekte BigInt-Konvertierung für Lovelace (1 ADA = 1.000.000 Lovelace)
-            const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
-
-            alert(`⏳ Opening ${connectedWalletName}... Please sign the transaction to transfer ${adaAmount} ADA to the presale vault.`);
-
-            // Transaktion bauen
-            const tx = await lucid.newTx()
-                .payToAddress(PRESALE_WALLET_ADDRESS, { lovelace: lovelaceAmount })
-                .complete();
-
-            // Transaktion vom Nutzer signieren lassen (Wallet öffnet Passworteingabe)
-            const signedTx = await tx.sign().complete();
-
-            // Transaktion an die Cardano Blockchain senden
-            const txHash = await signedTx.submit();
-
-            alert(`🎉 Success! Transaction submitted.\n\nTx Hash: ${txHash}\n\nYour purchase is registered. Tokens will be distributed based on the automated rollback/vending logic!`);
+        // 💸 TRANSAKTIONSABLAUF (Nutzt jetzt die bestehende Lucid-Instanz)
+        async function executePresaleTransaction() {
+            const adaAmount = document.getElementById('adaInput').value;
+            if (adaAmount < 50) { alert("⚠️ Minimum contribution is 50 ADA."); return; }
+            if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
             
-            // Visuellen Balken lokal anheben
-            const currentProgress = 1250 + parseFloat(adaAmount);
-            updateProgressBar(currentProgress);
+            if (!connectedWalletName || !lucidInstance) { 
+                toggleWalletModal(); 
+                return; 
+            }
 
-        } catch (error) {
-            console.error("Transaction failed:", error);
-            alert("❌ Transaction failed or was canceled by the user.");
+            if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
+                alert("🛑 Configuration Error: Please enter your real project wallet address in the code first!");
+                return;
+            }
+
+            try {
+                const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
+                alert(`⏳ Opening ${connectedWalletName}... Please sign the transaction to contribute ${adaAmount} ADA.`);
+
+                const tx = await lucidInstance.newTx()
+                    .payToAddress(PRESALE_WALLET_ADDRESS, { lovelace: lovelaceAmount })
+                    .complete();
+
+                const signedTx = await tx.sign().complete();
+                const txHash = await signedTx.submit();
+
+                alert(`🎉 Success!\n\nTx Hash: ${txHash}\n\nYour contribution is complete!`);
+                
+                // Lokalen Balken-Inkrement simulieren
+                const currentProgress = 1250 + parseFloat(adaAmount);
+                updateProgressBar(currentProgress);
+
+            } catch (error) {
+                console.error("Tx Engine Error:", error);
+                alert("❌ Transaction failed or was canceled by user.");
+            }
         }
-    }
+
 </script>
 </body>
 </html>
