@@ -276,7 +276,7 @@
     const HARD_CAP = 100000;
     
     // ⚠️ TRAGE HIER DEINE ECHTE TEST-EMPFÄNGER-WALLET-ADRESSE EIN:
-    const PRESALE_WALLET_ADDRESS = "addr1_deine_echte_wallet_adresse_hier_einsetzen..."; 
+    const PRESALE_WALLET_ADDRESS = "addr1qy438lrkxq4a9l0ncs2mf85gz0zs7uvvajnxjzkppmnx79m0w63xjxdzh0f79q9almd3nqyg8ckpe55m7d7d0pq8fj8sdxs28j"; 
 
     let connectedWalletName = null;
     let apiInstance = null; // Speichert die echte Wallet-Schnittstelle
@@ -344,7 +344,7 @@
         document.getElementById('actionBtn').innerText = 'Acquire Tokens';
     }
 
-    // 💸 DIREKTER TRANSAKTIONS-BEFEHL AN ETERNL (OHNE BLOCKFROST / NO-CRASH)
+    // 💸 DIREKTER TRANSAKTIONS-BEFEHL AN ETERNL (KORRIGIERTE BIGINT SYNTAX)
     async function executePresaleTransaction() {
         const adaAmount = document.getElementById('adaInput').value;
         
@@ -364,10 +364,9 @@
         try {
             alert(`⏳ Requesting signature from ${connectedWalletName}... The wallet extension window should open now.`);
 
-            // Fehlerfreie, direkte Krypto-Interaktion über CIP-30:
-            // Wir zwingen Eternl, eine standardisierte Sende-Anforderung zu öffnen.
-            // Der Betrag wird direkt als Hexadezimal-Lovelace übergeben.
-            const lovelaceHex = (BigInt(adaAmount) * 1000000BigInt).toString(16);
+            // Native, fehlerfreie BigInt-Multiplikation für Lovelace
+            const lovelaceBigInt = BigInt(adaAmount) * BigInt(1000000);
+            const lovelaceHex = lovelaceBigInt.toString(16);
             
             // Dieser native Befehl steuert das Eternl-Fenster direkt an
             const txHash = await apiInstance.signTx({
@@ -391,6 +390,7 @@
 </script>
 </body>
 </html>
+
 
     <!-- Krypto Disclaimer -->
 <div class="card" style="font-size: 0.85rem; border-color: #dc2626; background-color: #1a1012;">
