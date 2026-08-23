@@ -234,16 +234,18 @@
             </div>
 
 
-    <!-- Wallet Selection Popup Modal -->
+        <!-- Wallet Selection Popup Modal -->
     <div id="walletModal" class="modal">
         <div class="modal-content">
             <h4 style="margin-top:0;">Select Wallet</h4>
-            <button onclick="mockConnectWallet('Eternl')" class="wallet-option">Eternl</button>
-            <button onclick="mockConnectWallet('Vespr')" class="wallet-option">Vespr Mobile</button>
-            <button onclick="mockConnectWallet('Lace')" class="wallet-option">Lace</button>
+            <!-- Echte Verbindungsauslöser hinzugefügt -->
+            <button onclick="connectRealWallet('Eternl')" class="wallet-option">Eternl</button>
+            <button onclick="connectRealWallet('Vespr')" class="wallet-option">Vespr Mobile</button>
+            <button onclick="connectRealWallet('Lace')" class="wallet-option">Lace</button>
             <button onclick="toggleWalletModal()" style="background:none; border:none; color:#9ca3af; margin-top:10px; cursor:pointer;">Close</button>
         </div>
     </div>
+
 
     <!-- Einbindung der echten Cardano-Web3-Bibliotheken (Lucid v0.10.x stabile CDN Version) -->
 <script src="https://unpkg.com"></script>
