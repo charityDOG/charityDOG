@@ -1,4 +1,4 @@
-import { BrowserWallet, Transaction, Forge } from '@meshjs/core';
+import { BrowserWallet, Transaction, Forge } from 'https://meshjs.dev';
 
 // 1. Admin-Wallet verbinden
 const wallet = await BrowserWallet.enable('eternl'); // oder nami/lace
