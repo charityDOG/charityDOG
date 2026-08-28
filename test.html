@@ -1,427 +1,90 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharityDOG ($cDOG) - Community, loyalty, and fairness</title>
-    <style>
-        :root {
-            --bg-color: #0b0e14;
-            --card-color: #161b26;
-            --accent-color: #0033ad; /* Cardano Blue */
-            --text-color: #f0f2f5;
-            --text-muted: #94a3b8;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-        }
-        header {
-            background-color: var(--card-color);
-            padding: 20px;
-            text-align: center;
-            border-bottom: 2px solid var(--accent-color);
-        }
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        .hero {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            color: var(--text-color);
-            margin-bottom: 10px;
-        }
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-        }
-        .badge {
-            background-color: var(--accent-color);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-        .card {
-            background-color: var(--card-color);
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            border: 1px solid #232d3f;
-        }
-        h2 {
-            color: var(--text-color);
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 8px;
-            margin-top: 0;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        ul li {
-            padding: 10px 0;
-            border-bottom: 1px solid #232d3f;
-        }
-        ul li:last-child {
-            border-bottom: none;
-        }
-        .bold {
-            font-weight: bold;
-            color: #fff;
-        }
-        footer {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>charityDOG Preprod Presale</title>
+  <style>
+    :root { --ink:#f7f3ed; --muted:#a8aaa8; --bg:#101313; --panel:#191d1c; --line:#343a36; --hot:#ff705b; --mint:#9ed7b5; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:radial-gradient(circle at 80% 0%,#2b3830 0,#101313 38%); font:16px/1.5 Georgia,serif; }
+    main { width:min(1080px,calc(100% - 32px)); margin:0 auto; padding:28px 0 64px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:12px 0 54px; }
+    .brand { display:flex; align-items:center; gap:12px; font-size:1.2rem; font-weight:bold; }
+    button { border:0; border-radius:6px; padding:12px 18px; font:700 15px Georgia,serif; cursor:pointer; }
+    button:disabled { cursor:not-allowed; opacity:.5; }
+    .connect,.buy { background:var(--hot); color:#161616; }
+    .disconnect { background:transparent; color:var(--muted); border:1px solid var(--line); }
+    .hero { max-width:720px; padding-bottom:46px; }
+    .eyebrow { color:var(--mint); font:700 13px/1.2 Arial,sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { max-width:700px; margin:14px 0; font-size:clamp(2.5rem,7vw,5.8rem); line-height:.94; letter-spacing:0; }
+    .hero p { max-width:590px; color:var(--muted); font-size:1.15rem; }
+    .grid { display:grid; grid-template-columns:1fr 1.15fr; gap:18px; align-items:start; }
+    .panel { background:rgba(25,29,28,.92); border:1px solid var(--line); border-radius:8px; padding:24px; }
+    .panel h2 { margin:0 0 20px; font-size:1.35rem; }
+    .stats { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); }
+    .stat { padding:16px; background:var(--panel); }
+    .stat span { display:block; color:var(--muted); font:12px Arial,sans-serif; text-transform:uppercase; letter-spacing:.08em; }
+    .stat strong { display:block; margin-top:5px; font-size:1.35rem; }
+    .bar { height:10px; margin:14px 0 8px; overflow:hidden; background:#303632; border-radius:5px; }
+    .bar i { display:block; width:0; height:100%; background:var(--mint); transition:width .4s ease; }
+    label { display:block; margin:20px 0 7px; color:var(--muted); font:12px Arial,sans-serif; text-transform:uppercase; letter-spacing:.08em; }
+    input { width:100%; border:1px solid var(--line); border-radius:5px; background:#0e1110; color:var(--ink); padding:13px; font:1.1rem Georgia,serif; }
+    .receive { display:flex; justify-content:space-between; gap:12px; margin:10px 0 20px; color:var(--mint); font-size:1.5rem; }
+    .wallet { display:none; align-items:center; justify-content:space-between; gap:12px; margin-top:20px; padding-top:18px; border-top:1px solid var(--line); }
+    .wallet small { display:block; color:var(--muted); overflow-wrap:anywhere; }
+    #status { min-height:24px; margin:16px 0 0; color:var(--muted); }
+    .note { color:var(--muted); font-size:.92rem; }
+    code { color:var(--mint); font-family:Consolas,monospace; font-size:.82rem; overflow-wrap:anywhere; }
+    footer { margin-top:26px; color:var(--muted); font:12px Arial,sans-serif; }
+    @media (max-width:760px) { header { padding-bottom:38px; } .grid { grid-template-columns:1fr; } h1 { font-size:3.5rem; } }
+  </style>
 </head>
 <body>
-
-    <header style="text-align: center; padding: 30px 20px;">
-        <img src="logo.jpg" alt="CharityDOG Logo" style="width: 150px; height: 150px; border-radius: 50%; border: 3px solid var(--accent-color); margin-bottom: 15px;">
-        <div style="font-size: 28px; font-weight: bold; letter-spacing: 1px;">CharityDOG ($cDOG)</div>
-    </header>
-
-    <div class="container">
-        
-        <!-- Hero Section -->
-        <div class="hero">
-            <span class="badge">Gamified Holding Incentive on Cardano</span>
-            <h1>Unite the Pack</h1>
-        </div>
-
-        <!-- Pre-Launch & Construction Notice -->
-        <div class="card" style="border: 2px dashed #f59e0b; background-color: #1e1b4b; text-align: center; padding: 20px; margin-bottom: 25px;">
-            <h3 style="color: #f59e0b; margin-top: 0; font-size: 1.3rem;">🚧 PROJECT CURRENTLY IN PRE-LAUNCH 🚧</h3>
-            <p style="margin-bottom: 5px; font-weight: bold;">Important notice for all visitors:</p>
-            <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 5px;">
-                This website is currently for preparation purposes only. The token <strong>$cDOG has NOT been launched on the blockchain yet</strong> and now, an active public sale is running. Please do not send ADA to any addresses. We are setting up everything securely behind the scenes – the official launch date will be announced here soon!
-            </p>
-        </div>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>charityDOG Token Presale - The Most Honest Pug on Cardano</title>
-    <!-- Stable CSS layout framework -->
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <style>
-        body { background-color: #0b0f19; color: #f3f4f6; font-family: sans-serif; padding: 0; margin: 0; }
-        
-        /* Modern Marquee (Laufschrift) Styles */
-        .marquee-container { background: #111827; border-b: 1px solid #f59e0b; overflow: hidden; white-space: nowrap; padding: 10px 0; box-shadow: 0 2px 15px rgba(245, 158, 11, 0.15); }
-        .marquee-text { display: inline-block; padding-left: 100%; font-weight: 900; font-size: 16px; color: #f59e0b; letter-spacing: 2px; text-transform: uppercase; animation: marquee 25s linear infinite; }
-        @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
-        
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 60px; }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-b: 1px solid #1f2937; margin-bottom: 40px; }
-        .logo-container { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: bold; color: #f59e0b; }
-        .nav-logo-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #f59e0b; }
-        .grid-split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; margin-bottom: 40px; }
-        @media (max-width: 768px) { .grid-split { grid-template-columns: 1fr; } }
-        .hero-header-block { display: flex; align-items: center; gap: 20px; margin-top: 10px; margin-bottom: 20px; }
-        .hero-logo-img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); flex-shrink: 0; }
-        .card { background: #111827; border: 1px solid #374151; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1); }
-        .btn-amber { background-color: #f59e0b; color: #000; border: none; padding: 12px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; transition: 0.2s; }
-        .btn-amber:hover { background-color: #d97706; }
-        .input-box { background: #030712; border: 1px solid #4b5563; color: #fff; padding: 12px; width: 100%; border-radius: 8px; font-size: 18px; box-sizing: border-box; }
-        .progress-bg { background: #374151; height: 12px; border-radius: 6px; overflow: hidden; margin: 15px 0; }
-        .progress-bar { background: #f59e0b; height: 100%; width: 25%; transition: 0.5s; }
-        .badge { background: rgba(245, 158, 11, 0.15); color: #fbbf24; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block; font-weight: bold; }
-        .feature-box { background: #1f2937; padding: 15px; border-radius: 12px; margin-top: 15px; }
-        .text-gradient { color: #f59e0b; font-weight: bold; }
-        .disclaimer-box { background: rgba(239, 68, 68, 0.05); border: 1px solid #ef4444; padding: 20px; border-radius: 12px; margin-top: 40px; margin-bottom: 40px; }
-        
-        /* Modal for Wallets */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; }
-        .modal-content { background: #111827; padding: 20px; border-radius: 12px; width: 300px; text-align: center; border: 1px solid #374151; }
-        .wallet-option { background: #1f2937; border: 1px solid #4b5563; color: white; padding: 10px; margin: 8px 0; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        
-        /* Wallet Info Panel Styles */
-        .wallet-panel { background: #111827; border: 1px solid #374151; padding: 8px 12px; border-radius: 8px; display: none; align-items: center; gap: 12px; font-size: 13px; }
-        .wallet-meta { display: flex; flex-direction: column; text-align: left; }
-        .wallet-balance { color: #f59e0b; font-weight: bold; }
-        .wallet-address { color: #9ca3af; font-family: monospace; }
-        .btn-disconnect { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
-        .btn-disconnect:hover { background: #dc2626; }
-    </style>
-</head>
-<body>
-
-    <!-- Top Running Text Banner (Marquee) -->
-    <div class="marquee-container">
-        <div class="marquee-text">
-            ⚡ PRESALE-TIME!!! 🔥 JOIN THE PACK TODAY!!! ⚡ PRESALE-TIME!!! 🔥 1 ADA = 3,000 $cDOG !!! ⚡ PRESALE-TIME!!! 🔥 NO RUG PULLS, JUST LOYALTY!!! ⚡
-        </div>
+<main>
+  <header>
+    <div class="brand">charityDOG / PREPROD</div>
+    <button id="connect" class="connect" type="button">Connect Eternl</button>
+  </header>
+  <section class="hero">
+    <div class="eyebrow">Cardano pre-production network</div>
+    <h1>Join the pack before the bowl is empty.</h1>
+    <p>This is the charityDOG testnet presale. Payments use tADA and rewards use test tokens only. Nothing on this page is a mainnet transaction.</p>
+  </section>
+  <section class="grid">
+    <div class="panel">
+      <h2>Presale status</h2>
+      <div class="stats">
+        <div class="stat"><span>Raised</span><strong id="raised">Loading</strong></div>
+        <div class="stat"><span>Cap</span><strong>100,000 ADA</strong></div>
+        <div class="stat"><span>Rate</span><strong>3,000 tCDOG</strong></div>
+        <div class="stat"><span>Deadline</span><strong>06 Sep 2026</strong></div>
+      </div>
+      <div class="bar"><i id="progress"></i></div>
+      <p class="note">Minimum 5 ADA. Maximum 2,000 ADA per transaction. Testnet assets have no real-world value.</p>
+      <p class="note">State: <code>addr_test1wrmfyk28dtdhayr578nuzj9ked2ar672yyphu5kcvl5p0tguv3guz</code></p>
     </div>
-
-    <div class="container">
-        <!-- Navigation -->
-        <nav>
-            <div class="logo-container">
-                <img src="logo.jpg" alt="charityDOG Logo" class="nav-logo-img">
-                <span>charityDOG</span>
-            </div>
-             <div>
-                <!-- Standard Connect Button -->
-                <button id="connectWalletBtn" onclick="toggleWalletModal()" style="background:#1f2937; color:#fff; border:1px solid #4b5563; padding:8px 16px; border-radius:6px; cursor:pointer;">Connect Wallet</button>
-                
-                 <!-- Dynamic Connected Wallet Panel -->
-                <div id="walletInfoPanel" class="wallet-panel">
-                    <div class="wallet-meta">
-                        <!-- class="notranslate" verhindert, dass der Browser Eternl in "EWIG" übersetzt -->
-                        <span id="panelWalletName" class="notranslate" style="font-weight: bold; text-transform: uppercase;"></span>
-                        <span class="wallet-balance"><span id="panelWalletBalance">0.00</span> ADA</span>
-                        <!-- Hier wird die echte Cardano-Adresse transparent eingeblendet -->
-                        <span id="panelWalletAddress" class="notranslate" style="color: #9ca3af; font-family: monospace; font-size: 11px; margin-top: 2px;"></span>
-                    </div>
-                    <button onclick="disconnectWallet()" class="btn-disconnect">Disconnect</button>
-                </div>
-
-        </nav>
-
-        <!-- Main Content Grid -->
-        <div class="grid-split">
-            <!-- Left Side: Project Vision -->
-            <div>
-                <span class="badge">✨ 100% Honest & Transparent</span>
-                <div class="hero-header-block">
-                    <img src="logo.jpg" alt="Cool charityDOG" class="hero-logo-img">
-                    <h1 style="font-size: 38px; margin: 0; line-height: 1.1;">The Most Honest Pug on <span class="text-gradient">Cardano</span></h1>
-                </div>
-                <p style="color: #9ca3af; line-height: 1.6; font-size: 16px;">
-                    No hidden team tokens, no malicious bots, no lies. <strong>charityDOG</strong> launches with pure, honest intentions to conquer the Cardano DeFi ecosystem as a loyal companion. Join the pack from day one!
-                </p>
-                <div class="feature-box">
-                    <b style="color: #fbbf24;">🔒 Rug Pull Safe Guarantee</b><br>
-                    <small style="color: #9ca3af;">All ADA raised through this presale will be locked directly into the Minswap Liquidity Pool right after completion.</small>
-                </div>
-                <div class="feature-box">
-                    <b style="color: #fbbf24;">🤖 Whale & Bot Protection</b><br>
-                    <small style="color: #9ca3af;">Maximum purchase limit of 2,000 ADA per wallet to block unfair price manipulation during launch.</small>
-                </div>
-            </div>
-
-            <!-- Right Side: Interactive Presale Panel -->
-            <div>
-                <div class="card">
-                    <h3 style="margin-top:0; display:flex; justify-content:space-between;">
-                        <span>Presale Active</span>
-                        <span style="color:#10b981;">● Live</span>
-                    </h3>
-                    <div style="display:flex; justify-content:space-between; font-size:14px; color:#9ca3af;">
-                        <span>Progress</span>
-                        <span id="progressText" style="color:#fff; font-weight:bold;">1,250 / 100,000 ADA</span>
-                    </div>
-                    <div class="progress-bg">
-                        <div class="progress-bar" id="progressBar"></div>
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <label style="font-size:12px; color:#9ca3af; text-transform:uppercase; font-weight:bold;">You send:</label>
-                        <input type="number" id="adaInput" value="100" min="5" max="2000" oninput="calculateTokens()" class="input-box">
-                        <span style="font-size:11px; color:#6b7280; display:block; margin-top:4px;">Min: 5 | Max: 2,000 ADA</span>
-                    </div>
-                    <div style="margin-top: 20px; margin-bottom: 25px;">
-                        <label style="font-size:12px; color:#9ca3af; text-transform:uppercase; font-weight:bold;">You receive (Fixed Price 1:3,000):</label>
-                        <div style="background:#030712; padding:12px; border-radius:8px; font-size:20px; font-weight:bold; color:#f59e0b; border:1px solid #1f2937;">
-                            <span id="cdogOutput">300,000</span> <span style="font-size:14px; color:#9ca3af; float:right;">cDOG</span>
-                        </div>
-                    </div>
-                    <button id="actionBtn" onclick="executePresaleTransaction()" class="btn-amber">Acquire Tokens</button>
-                </div>
-            </div>
-        </div>
-        <div class="feature-box">
-                    <b style="color: #fbbf24;">🤝 Our Fairness & Refund Pledge</b><br>
-                    <small style="color: #9ca3af;">Loyalty goes both ways. If our minimum goal of 25,000 ADA is not achieved by the end of the presale, 100% of all contributed ADA will be fully refunded back to your wallets. Zero risk, zero tricks—just pure commitment to the pack.</small>
-                </div>
-            </div>
-
-
-            <!-- Wallet Selection Popup Modal -->
-    <div id="walletModal" class="modal">
-        <div class="modal-content">
-            <h4 style="margin-top:0;">Select Wallet</h4>
-            <!-- Echte Verbindungsauslöser hinzugefügt -->
-            <button onclick="connectRealWallet('Eternl')" class="wallet-option">Eternl</button>
-            <button onclick="connectRealWallet('Vespr')" class="wallet-option">Vespr Mobile</button>
-            <button onclick="connectRealWallet('Lace')" class="wallet-option">Lace</button>
-            <button onclick="toggleWalletModal()" style="background:none; border:none; color:#9ca3af; margin-top:10px; cursor:pointer;">Close</button>
-        </div>
+    <div class="panel">
+      <h2>Make a test purchase</h2>
+      <label for="ada">Amount in tADA</label>
+      <input id="ada" type="number" min="5" max="2000" step="1" value="5">
+      <div class="receive"><span>You receive</span><strong><span id="tokens">15,000</span> tCDOG</strong></div>
+      <button id="buy" class="buy" type="button" disabled>Connect wallet to buy</button>
+      <div id="wallet" class="wallet"><div><strong>Eternl</strong><small id="walletAddress"></small></div><button id="disconnect" class="disconnect" type="button">Disconnect</button></div>
+      <p id="status" role="status">Connect Eternl to load the live Preprod state.</p>
     </div>
-
-
-<!-- Einbindung der stabilen Lucid-Bibliothek, die dein Eternl-Fenster triggert -->
-<script src="https://unpkg.com"></script>
-
-<script>
-    const RATE = 3000;
-    const HARD_CAP = 100000;
-    
-    // ⚠️ HIER DEINE ECHTE CARDANO-PROJEKT-WALLET-ADRESSE EINTRAGEN:
-    const PRESALE_WALLET_ADDRESS = "addr1qy438lrkxq4a9l0ncs2mf85gz0zs7uvvajnxjzkppmnx79m0w63xjxdzh0f79q9almd3nqyg8ckpe55m7d7d0pq8fj8sdxs28j"; 
-
-    let apiInstance = null;
-    let connectedWalletName = null;
-
-    document.addEventListener("DOMContentLoaded", function() {
-        calculateTokens();
-        updateProgressBar(1250); 
-    });
-
-    function calculateTokens() {
-        const adaInput = document.getElementById('adaInput').value;
-        const cdogOutput = document.getElementById('cdogOutput');
-        if (adaInput < 0 || isNaN(adaInput)) { cdogOutput.innerText = "0"; return; }
-        cdogOutput.innerText = (adaInput * RATE).toLocaleString('en-US');
-    }
-
-    function toggleWalletModal() {
-        const modal = document.getElementById('walletModal');
-        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
-    }
-
-    function updateProgressBar(currentAmount) {
-        document.getElementById('progressText').innerText = `${currentAmount.toLocaleString('en-US')} / ${HARD_CAP.toLocaleString('en-US')} ADA`;
-        const percentage = (currentAmount / HARD_CAP) * 100;
-        document.getElementById('progressBar').style.width = `${percentage}%`;
-    }
-
-    // 🌐 WALLET-VERBINDUNG
-    async function connectRealWallet(walletName) {
-        const lowerName = walletName.toLowerCase();
-        if (!window.cardano || !window.cardano[lowerName]) {
-            alert(`⚠️ ${walletName} extension not detected. Please install it.`);
-            return;
-        }
-
-        try {
-            apiInstance = await window.cardano[lowerName].enable();
-            connectedWalletName = walletName;
-            
-            document.getElementById('connectWalletBtn').style.display = 'none';
-            document.getElementById('panelWalletName').innerText = "✓ " + walletName;
-            document.getElementById('panelWalletBalance').innerText = "Ready ADA";
-            document.getElementById('panelWalletAddress').innerText = walletName + " Active";
-            document.getElementById('walletInfoPanel').style.display = 'flex';
-
-            document.getElementById('actionBtn').innerText = "Deposit via " + walletName;
-            toggleWalletModal();
-        } catch (error) {
-            console.error("Connection failed:", error);
-            alert("❌ Connection declined by user.");
-        }
-    }
-
-    // 🛑 DISCONNECT
-    function disconnectWallet() {
-        apiInstance = null;
-        connectedWalletName = null;
-        document.getElementById('walletInfoPanel').style.display = 'none';
-        document.getElementById('connectWalletBtn').style.display = 'block';
-        document.getElementById('connectWalletBtn').innerText = 'Connect Wallet';
-        document.getElementById('actionBtn').innerText = 'Acquire Tokens';
-    }
-
-    // 💸 UNBLOCKIERTER INJEKTIONS-TRANSFER (ENTFERNT DEN BLOCKIERENDEN ALERT)
-    async function executePresaleTransaction() {
-        const adaAmount = document.getElementById('adaInput').value;
-        const actionBtn = document.getElementById('actionBtn');
-        
-        // Limits prüfen (5 ADA für deinen Test)
-        if (adaAmount < 5) { alert("⚠️ Minimum contribution is 5 ADA."); return; }
-        if (adaAmount > 2000) { alert("⚠️ Maximum contribution is 2,000 ADA."); return; }
-        
-        if (!connectedWalletName || !apiInstance) { 
-            toggleWalletModal(); 
-            return; 
-        }
-
-        if (PRESALE_WALLET_ADDRESS.startsWith("addr1_deine_echte")) {
-            alert("🛑 Configuration Error: Please enter your real project wallet address in code line 6!");
-            return;
-        }
-
-        try {
-            // Text direkt im Button ändern anstatt ein störendes Alert-Fenster zu öffnen
-            actionBtn.innerText = `⏳ Opening ${connectedWalletName}...`;
-            actionBtn.style.backgroundColor = "#d97706"; // Ändert die Farbe kurz auf dunkleres Orange
-
-            // Lovelace berechnen (1 ADA = 1.000.000 Lovelace)
-            const lovelaceAmount = BigInt(adaAmount) * BigInt(1000000);
-            const lovelaceHex = lovelaceAmount.toString(16).padStart(16, '0');
-
-            // Ruft die krisensichere Transfer-Schnittstelle ohne Blockaden auf
-            const txHash = await apiInstance.experimental.send({
-                address: PRESALE_WALLET_ADDRESS,
-                amount: lovelaceHex
-            }).catch(async (err) => {
-                console.log("Switching to standard transaction request...");
-                return await apiInstance.signTx({
-                    outputs: [{ address: PRESALE_WALLET_ADDRESS, amount: lovelaceAmount.toString() }]
-                }, true);
-            });
-
-            if (txHash) {
-                alert(`🎉 Success! Transaction approved by user.\n\nTx Hash: ${txHash}`);
-                const currentProgress = 1250 + parseFloat(adaAmount);
-                updateProgressBar(currentProgress);
-                actionBtn.innerText = "Acquire Tokens";
-                actionBtn.style.backgroundColor = "#f59e0b";
-            }
-
-        } catch (error) {
-            console.error("Direct payment interaction failed:", error);
-            
-            // Der absolute Notfall-Fallback (System-Absprung):
-            // Falls das Plugin den Web-Befehl verweigert, öffnet das System die Wallet als eigenständiges Programm
-            console.log("Triggering deep-link system communication...");
-            const web3Link = `web+cardano:${PRESALE_WALLET_ADDRESS}?amount=${adaAmount}`;
-            window.location.href = web3Link;
-            
-            setTimeout(() => {
-                const currentProgress = 1250 + parseFloat(adaAmount);
-                updateProgressBar(currentProgress);
-                actionBtn.innerText = "Acquire Tokens";
-                actionBtn.style.backgroundColor = "#f59e0b";
-            }, 1000);
-        }
-    }
-    
+  </section>
+  <footer>charityDOG testnet presale · Preprod only · Policy and state values are fixed in this test build.</footer>
+</main>
+<script type="module">
+  import { Constr, Data, Koios, Lucid, getAddressDetails } from "https://esm.sh/@lucid-evolution/lucid@0.6.2";
+  const C = { stateAddress:"addr_test1wrmfyk28dtdhayr578nuzj9ked2ar672yyphu5kcvl5p0tguv3guz", stateUnit:"7370ac19007ccebe094f25687e469405a5f31492693b5086900f9e177374617465744e4654", tokenUnit:"3bfcef729ff02694f4f4727737b8a30ca70eca060c6f40b3a561c6c17443444f47", deadline:1788674400000, price:3000, cap:100000000n };
+  const $ = id => document.getElementById(id); let lucid; let walletApi; let stateUtxo; let validator;
+  function quote() { const ada=Number($("ada").value||0); $("tokens").textContent=(ada*C.price).toLocaleString("en-US"); }
+  async function loadState() { const us=await lucid.utxosAt(C.stateAddress); stateUtxo=us.find(u=>u.assets[C.stateUnit]===1n); if(!stateUtxo) throw Error("Presale state UTxO not found."); const d=Data.from(stateUtxo.datum); if(!(d instanceof Constr)||d.index!==0) throw Error("Invalid Sale datum."); const raised=Number(d.fields[0])/1e6; $("raised").textContent=`${raised.toLocaleString("en-US")} ADA`; $("progress").style.width=`${Math.min(100,raised/Number(C.cap)*100)}%`; }
+  async function connect() { if(!window.cardano?.eternl) throw Error("Eternl was not detected in this browser."); walletApi=await window.cardano.eternl.enable(); lucid=await Lucid(new Koios("https://preprod.koios.rest/api/v1"),"Preprod"); lucid.selectWallet.fromAPI(walletApi); $("walletAddress").textContent=await lucid.wallet().address(); $("wallet").style.display="flex"; $("connect").style.display="none"; $("buy").disabled=false; $("buy").textContent="Buy with Eternl"; await loadState(); validator=await (await fetch("presale-release.plutus")).json(); $("status").textContent="Wallet connected. Presale state loaded."; }
+  async function buy() { const ada=Number($("ada").value); if(!Number.isInteger(ada)||ada<5||ada>2000) throw Error("Choose an amount between 5 and 2,000 ADA."); const amount=BigInt(ada)*1000000n; const tokens=BigInt(ada*C.price); const currentTokens=stateUtxo.assets[C.tokenUnit]||0n; if(currentTokens<tokens) throw Error("Not enough tCDOG remains in the presale state."); const address=await lucid.wallet().address(); const hash=getAddressDetails(address).paymentCredential.hash; const ref=new Constr(0,[stateUtxo.txHash,BigInt(stateUtxo.outputIndex)]); const action=Data.to(new Constr(0,[hash,amount])); const next=Data.to(new Constr(0,[amount,tokens,100000000000n,25000000000n,3000n,C.deadline,5n,2000n])); const receipt=Data.to(new Constr(1,[hash,amount,tokens,ref,100000000000n,25000000000n,3000n,C.deadline])); const script={type:validator.type,script:validator.cborHex}; $("buy").disabled=true; $("status").textContent="Building transaction..."; const tx=await lucid.newTx().collectFrom([stateUtxo],action).attach.SpendingValidator(script).pay.ToAddressWithData(C.stateAddress,{kind:"inline",value:next},{lovelace:10000000n,[C.tokenUnit]:currentTokens-tokens,[C.stateUnit]:1n}).pay.ToAddressWithData(address,{kind:"inline",value:Data.to(ref)},{lovelace:1500000n,[C.tokenUnit]:tokens}).pay.ToAddressWithData(C.stateAddress,{kind:"inline",value:receipt},{lovelace:amount}).addSignerKey(hash).validTo(Number(lucid.slotToUnixTime(lucid.currentSlot()+600))).complete(); const signed=await tx.sign.withWallet().complete(); const txHash=await signed.submit(); $("status").textContent=`Submitted: ${txHash}`; $("buy").textContent="Buy submitted"; }
+  $("ada").addEventListener("input",quote); $("connect").addEventListener("click",()=>connect().catch(e=>$("status").textContent=e.message)); $("buy").addEventListener("click",()=>buy().catch(e=>{$("status").textContent=e.message;$("buy").disabled=false;})); $("disconnect").addEventListener("click",()=>location.reload()); quote();
 </script>
-</body>
-</html>
-
-
-    <!-- Krypto Disclaimer -->
-<div class="card" style="font-size: 0.85rem; border-color: #dc2626; background-color: #1a1012;">
-    <h2 style="color: #ef4444; border-bottom-color: #ef4444;">⚠️ Cryptocurrency Risk Disclaimer</h2>
-    <p><strong>Important warning for all participants:</strong></p>
-    <p>CharityDOG ($cDOG) is a decentralized meme token deployed on the Cardano blockchain, built strictly for entertainment, gamification, and competitive community incentive purposes. $cDOG does not represent shares, securities, financial investments, or voting ownership in any corporate entity.</p>
-    <p>Acquiring cryptographic utility assets involves extreme risks, including the absolute risk of a total loss of all contributed funds. There are no guarantees or warranties of price appreciation, future financial return, or secondary market liquidity. The project leads do not offer financial, investment, or legal advice of any kind.</p>
-    <p>By interacting with this website, the underlying ledger scripts, or the asset, you confirm that you act completely on your own responsibility and release the project management from any and all liability for financial losses.</p>
-</div>
-    
-    <footer>
-        <p>&copy; 2026 CharityDOG ($cDOG) | Deployed on the Cardano Blockchain. All rights reserved.</p>
-    </footer>
-
 </body>
 </html>
